@@ -320,6 +320,32 @@ GLOBAL_FEEDS = [
     ("https://sifted.eu/feed/", "economy", "Sifted"),
     ("https://inc42.com/feed/", "economy", "Inc42 India"),
 
+    # === HEALTHCARE / BIOTECH (Round 3 gap: "FDA", "clinical trial") ===
+    ("https://www.fda.gov/about-fda/contact-fda/stay-informed/rss-feeds/fda-newsroom/rss.xml", "healthcare", "FDA Newsroom"),
+    ("https://www.statnews.com/feed/", "healthcare", "STAT News"),
+    ("https://www.fiercebiotech.com/rss/xml", "healthcare", "FierceBiotech"),
+    ("https://www.fiercepharma.com/rss/xml", "healthcare", "FiercePharma"),
+    ("https://endpts.com/feed/", "healthcare", "Endpoints News"),
+    ("https://www.biopharmadive.com/feeds/news/", "healthcare", "BioPharma Dive"),
+    ("https://www.pharmaceutical-technology.com/feed/", "healthcare", "Pharmaceutical Technology"),
+
+    # === AI / TECH INDUSTRY (Round 3 gap: "AI regulation", NVDA signals) ===
+    ("https://www.theinformation.com/feed", "technology", "The Information"),
+    ("https://siliconangle.com/feed/", "technology", "SiliconANGLE"),
+    ("https://aiweekly.co/feed/", "technology", "AI Weekly"),
+    ("https://jack-clark.net/feed/", "technology", "Import AI"),
+    ("https://hai.stanford.edu/news/rss.xml", "technology", "Stanford HAI"),
+
+    # === MARITIME / PIRACY (Round 3 gap: "piracy") ===
+    ("https://www.maritime-executive.com/rss", "supply_chain", "Maritime Executive"),
+    ("https://maritimesecurity.net/feed/", "supply_chain", "Maritime Security"),
+    ("https://www.rivieramm.com/rss", "supply_chain", "Riviera Maritime"),
+
+    # === MACRO ECONOMICS (Round 3 gap: "interest rate") ===
+    ("https://www.centralbanking.com/rss", "economy", "Central Banking"),
+    ("https://www.piie.com/rss/all", "economy", "Peterson Institute"),
+    ("https://voxeu.org/rss", "economy", "VoxEU CEPR"),
+
     # === MISSING CRITICAL FEEDS (customer-requested) ===
     ("https://www.opec.org/opec_web/en/press_room/28.htm", "economy", "OPEC News"),
     ("https://www.cftc.gov/Newsroom/rss_feed.html", "finance", "CFTC"),
@@ -338,5 +364,5 @@ GLOBAL_FEEDS = [
     ("https://googleprojectzero.blogspot.com/feeds/posts/default", "cyber", "Google Project Zero"),
 ]
 
-# Total: 242 feeds across 12+ categories (includes humanitarian, supply chain, agriculture, regulatory & weather packs)
+# Total: 279 feeds across 12+ categories (includes humanitarian, supply chain, agriculture, regulatory, weather, healthcare/biotech, AI/tech, maritime & macro econ packs)
 # Expandable — add more by appending to list
