@@ -93,16 +93,20 @@ def fetch_open_fda(db):
             if event.get('seriousnessdisabling'):
                 seriousness_flags.append('disabling')
 
-            # Higher anomaly for death/life-threatening
+            # Anomaly varies by seriousness + drug count + reaction count
+            base = 0.4
             if 'death' in seriousness_flags:
-                anomaly = 0.85
-                importance = 0.9
+                base = 0.65
             elif 'life-threatening' in seriousness_flags:
-                anomaly = 0.75
-                importance = 0.8
-            else:
-                anomaly = 0.55
-                importance = 0.65
+                base = 0.55
+            elif 'hospitalization' in seriousness_flags:
+                base = 0.45
+
+            # More drugs/reactions = more concerning (wider impact)
+            drug_factor = min(0.15, len(drug_names) * 0.03)
+            reaction_factor = min(0.15, len(reaction_names) * 0.03)
+            anomaly = min(0.95, base + drug_factor + reaction_factor)
+            importance = min(0.95, anomaly * 0.8 + 0.15)
 
             signal = Signal(
                 source='open_fda',
