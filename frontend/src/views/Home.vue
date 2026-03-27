@@ -2,9 +2,9 @@
   <div class="home-container">
     <!-- Top Navigation Bar -->
     <nav class="navbar" :style="s.navbar">
-      <div class="nav-brand" :style="s.navBrand">MIROFISH OFFLINE</div>
+      <div class="nav-brand" :style="s.navBrand">ORACLEFLOW</div>
       <div class="nav-links" :style="s.navLinks">
-        <a href="https://github.com/nikmcfly/MiroFish-Offline" target="_blank" class="github-link" :style="s.githubLink">
+        <a href="https://github.com/oracleflow" target="_blank" class="github-link" :style="s.githubLink">
           Visit our Github <span>↗</span>
         </a>
       </div>
@@ -26,7 +26,7 @@
 
           <div class="hero-desc" :style="s.heroDesc">
             <p :style="s.heroDescP">
-              From a single document, <span :style="s.highlightBold">MiroFish Offline</span> extracts reality seeds and builds a parallel world of <span :style="s.highlightOrange">autonomous AI agents</span> — running entirely on your machine. Inject variables, observe emergent behavior, and find <span :style="s.highlightCode">"local optima"</span> in complex social dynamics.
+              From a single document, <span :style="s.highlightBold">OracleFlow</span> extracts reality seeds and builds a parallel world of <span :style="s.highlightOrange">autonomous AI agents</span> — running entirely on your machine. Inject variables, observe emergent behavior, and find <span :style="s.highlightCode">"local optima"</span> in complex social dynamics.
             </p>
             <p class="slogan-text" :style="s.sloganText">
               Your data never leaves your machine. The future is simulated locally<span :style="s.blinkingCursor">_</span>
@@ -38,7 +38,7 @@
 
         <div class="hero-right" :style="s.heroRight">
           <div class="logo-container" :style="s.logoContainer">
-            <img src="../assets/logo/MiroFish_logo_left.jpeg" alt="MiroFish Logo" :style="s.heroLogo" />
+            <img src="../assets/logo/MiroFish_logo_left.jpeg" alt="OracleFlow Logo" :style="s.heroLogo" />
           </div>
           <button :style="s.scrollDownBtn" @click="scrollToBottom">↓</button>
         </div>
@@ -139,6 +139,20 @@
       </section>
 
       <HistoryDatabase />
+
+      <!-- OracleFlow Intelligence -->
+      <section class="intel-section" :style="s.intelSection">
+        <div class="intel-card" :style="s.intelCard" @click="$router.push('/dashboard')">
+          <div :style="s.intelCardInner">
+            <span :style="s.intelIcon">&#9733;</span>
+            <div>
+              <h3 :style="s.intelTitle">Intelligence Dashboard</h3>
+              <p :style="s.intelDesc">Monitor websites, track signals, analyze entities</p>
+            </div>
+          </div>
+          <span :style="s.intelArrow">&rarr;</span>
+        </div>
+      </section>
     </div>
   </div>
 </template>
@@ -215,6 +229,13 @@ const s = reactive({
   modelBadge: { position: 'absolute', bottom: '10px', right: '15px', fontFamily: mono, fontSize: '0.7rem', color: '#AAA' },
   btnSection: { padding: '0 20px 20px' },
   startEngineBtn: { width: '100%', background: '#000', color: '#fff', border: 'none', padding: '20px', fontFamily: mono, fontWeight: '700', fontSize: '1.1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', letterSpacing: '1px' },
+  intelSection: { borderTop: '1px solid #E5E5E5', paddingTop: '40px', marginTop: '60px' },
+  intelCard: { border: '2px solid #FF4500', padding: '24px 30px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', transition: 'all 0.2s', background: '#FFFAF8' },
+  intelCardInner: { display: 'flex', alignItems: 'center', gap: '16px' },
+  intelIcon: { fontSize: '2rem', color: '#FF4500' },
+  intelTitle: { fontWeight: '700', fontSize: '1.1rem', margin: '0 0 4px 0', color: '#000' },
+  intelDesc: { fontSize: '0.9rem', color: '#666', margin: '0' },
+  intelArrow: { fontSize: '1.4rem', color: '#FF4500', fontWeight: '700' },
 })
 
 const steps = [

@@ -1,0 +1,25 @@
+country: Netherlands
+code: NL
+region: europe
+languages:
+  - nl
+timezone: Europe/Amsterdam
+proxy_pool: ""
+
+sources:
+  government:
+    - url: https://www.government.nl
+      type: government_portal
+      frequency: "2h"
+    - url: https://www.tweedekamer.nl
+      type: legislature
+      frequency: "2h"
+
+  news: []
+  reddit: []
+  social: {}
+
+  political_entities:
+    - name: "Dick Schoof"
+      type: person
+      role: "Prime Minister"

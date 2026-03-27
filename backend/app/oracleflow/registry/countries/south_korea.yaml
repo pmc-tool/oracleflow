@@ -1,0 +1,25 @@
+country: South Korea
+code: KR
+region: east_asia
+languages:
+  - ko
+timezone: Asia/Seoul
+proxy_pool: ""
+
+sources:
+  government:
+    - url: https://www.president.go.kr
+      type: government_portal
+      frequency: "2h"
+    - url: https://www.assembly.go.kr
+      type: legislature
+      frequency: "2h"
+
+  news: []
+  reddit: []
+  social: {}
+
+  political_entities:
+    - name: "Yoon Suk Yeol"
+      type: person
+      role: "President"

@@ -1,0 +1,22 @@
+country: Nigeria
+code: NG
+region: africa
+languages:
+  - en
+timezone: Africa/Lagos
+proxy_pool: ""
+
+sources:
+  government:
+    - url: https://statehouse.gov.ng
+      type: government_portal
+      frequency: "2h"
+
+  news: []
+  reddit: []
+  social: {}
+
+  political_entities:
+    - name: "Bola Tinubu"
+      type: person
+      role: "President"

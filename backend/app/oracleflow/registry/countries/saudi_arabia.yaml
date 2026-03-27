@@ -1,0 +1,25 @@
+country: Saudi Arabia
+code: SA
+region: middle_east
+languages:
+  - ar
+timezone: Asia/Riyadh
+proxy_pool: ""
+
+sources:
+  government:
+    - url: https://www.my.gov.sa
+      type: government_portal
+      frequency: "2h"
+
+  news: []
+  reddit: []
+  social: {}
+
+  political_entities:
+    - name: "Mohammed bin Salman"
+      type: person
+      role: "Crown Prince"
+    - name: "King Salman"
+      type: person
+      role: "Head of State"

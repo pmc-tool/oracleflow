@@ -1,0 +1,22 @@
+country: Syria
+code: SY
+region: middle_east
+languages:
+  - ar
+timezone: Asia/Damascus
+proxy_pool: ""
+
+sources:
+  government:
+    - url: https://www.sana.sy
+      type: government_portal
+      frequency: "2h"
+
+  news: []
+  reddit: []
+  social: {}
+
+  political_entities:
+    - name: "Ahmad al-Sharaa"
+      type: person
+      role: "Head of State"

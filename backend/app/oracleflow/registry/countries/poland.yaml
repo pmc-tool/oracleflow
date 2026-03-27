@@ -1,0 +1,25 @@
+country: Poland
+code: PL
+region: europe
+languages:
+  - pl
+timezone: Europe/Warsaw
+proxy_pool: ""
+
+sources:
+  government:
+    - url: https://www.gov.pl
+      type: government_portal
+      frequency: "2h"
+    - url: https://www.sejm.gov.pl
+      type: legislature
+      frequency: "2h"
+
+  news: []
+  reddit: []
+  social: {}
+
+  political_entities:
+    - name: "Donald Tusk"
+      type: person
+      role: "Prime Minister"

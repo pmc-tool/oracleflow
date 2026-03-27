@@ -1,0 +1,22 @@
+country: Myanmar
+code: MM
+region: southeast_asia
+languages:
+  - my
+timezone: Asia/Yangon
+proxy_pool: ""
+
+sources:
+  government:
+    - url: https://www.moi.gov.mm
+      type: government_portal
+      frequency: "2h"
+
+  news: []
+  reddit: []
+  social: {}
+
+  political_entities:
+    - name: "Min Aung Hlaing"
+      type: person
+      role: "Head of State"

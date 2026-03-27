@@ -1,0 +1,25 @@
+country: Ukraine
+code: UA
+region: europe
+languages:
+  - uk
+timezone: Europe/Kyiv
+proxy_pool: ""
+
+sources:
+  government:
+    - url: https://www.president.gov.ua
+      type: government_portal
+      frequency: "2h"
+    - url: https://www.rada.gov.ua
+      type: legislature
+      frequency: "2h"
+
+  news: []
+  reddit: []
+  social: {}
+
+  political_entities:
+    - name: "Volodymyr Zelensky"
+      type: person
+      role: "President"

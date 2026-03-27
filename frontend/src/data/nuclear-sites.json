@@ -1,0 +1,22 @@
+[
+  {"name": "Natanz", "lat": 33.72, "lng": 51.73, "country": "IR", "type": "enrichment"},
+  {"name": "Yongbyon", "lat": 39.80, "lng": 125.75, "country": "KP", "type": "reactor"},
+  {"name": "Dimona", "lat": 31.00, "lng": 35.15, "country": "IL", "type": "weapons"},
+  {"name": "Fordow", "lat": 34.87, "lng": 51.58, "country": "IR", "type": "enrichment"},
+  {"name": "Isfahan (UCF)", "lat": 32.65, "lng": 51.68, "country": "IR", "type": "conversion"},
+  {"name": "Bushehr", "lat": 28.83, "lng": 50.89, "country": "IR", "type": "reactor"},
+  {"name": "Kahuta", "lat": 33.60, "lng": 73.39, "country": "PK", "type": "enrichment"},
+  {"name": "Khushab", "lat": 32.02, "lng": 72.22, "country": "PK", "type": "reactor"},
+  {"name": "Bhabha (Trombay)", "lat": 19.01, "lng": 72.92, "country": "IN", "type": "research"},
+  {"name": "Yucca Mountain", "lat": 36.85, "lng": -116.43, "country": "US", "type": "storage"},
+  {"name": "Sellafield", "lat": 54.42, "lng": -3.50, "country": "UK", "type": "reprocessing"},
+  {"name": "La Hague", "lat": 49.68, "lng": -1.88, "country": "FR", "type": "reprocessing"},
+  {"name": "Mayak", "lat": 55.71, "lng": 60.80, "country": "RU", "type": "reprocessing"},
+  {"name": "Sarov (Arzamas-16)", "lat": 54.93, "lng": 43.32, "country": "RU", "type": "weapons"},
+  {"name": "Seversk (Tomsk-7)", "lat": 56.60, "lng": 84.88, "country": "RU", "type": "enrichment"},
+  {"name": "Punggye-ri", "lat": 41.28, "lng": 129.09, "country": "KP", "type": "testing"},
+  {"name": "Rokkasho", "lat": 40.96, "lng": 141.33, "country": "JP", "type": "reprocessing"},
+  {"name": "Barakah", "lat": 23.96, "lng": 52.26, "country": "AE", "type": "reactor"},
+  {"name": "Lop Nur", "lat": 41.55, "lng": 88.73, "country": "CN", "type": "testing"},
+  {"name": "Los Alamos", "lat": 35.84, "lng": -106.29, "country": "US", "type": "weapons"}
+]

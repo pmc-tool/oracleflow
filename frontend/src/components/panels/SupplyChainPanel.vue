@@ -1,0 +1,198 @@
+<template>
+  <BasePanel panelId="supply-chain" title="SUPPLY CHAIN">
+    <template #default>
+      <div class="sc-container">
+        <div class="sc-section__title">CHOKEPOINT STATUS</div>
+
+        <div
+          v-for="(cp, idx) in chokepoints"
+          :key="idx"
+          class="sc-chokepoint"
+        >
+          <div class="sc-chokepoint__header">
+            <span class="sc-chokepoint__name">{{ cp.name }}</span>
+            <span class="sc-chokepoint__status" :style="{ color: statusColor(cp.status) }">
+              &#x25CF; {{ cp.status }}
+            </span>
+          </div>
+          <div class="sc-chokepoint__detail">
+            {{ cp.detail }}
+          </div>
+        </div>
+
+        <div class="sc-divider"></div>
+        <div class="sc-section__title">SHIPPING INDEX</div>
+
+        <div
+          v-for="(idx_item, idx) in shippingIndices"
+          :key="idx"
+          class="sc-index"
+        >
+          <span class="sc-index__name">{{ idx_item.name }}</span>
+          <span class="sc-index__value">{{ idx_item.value }}</span>
+          <span
+            class="sc-index__change"
+            :class="idx_item.positive ? 'change-positive' : 'change-negative'"
+          >{{ idx_item.change }}</span>
+        </div>
+      </div>
+    </template>
+  </BasePanel>
+</template>
+
+<script setup>
+import { ref } from 'vue'
+import BasePanel from '../BasePanel.vue'
+
+const chokepoints = ref([
+  {
+    name: 'Strait of Hormuz',
+    status: 'NORMAL',
+    detail: 'Vessels: 42 | Oil: 21M bbl/day',
+  },
+  {
+    name: 'Suez Canal',
+    status: 'ELEVATED',
+    detail: 'Vessels: 38 | Disruption risk',
+  },
+  {
+    name: 'Panama Canal',
+    status: 'NORMAL',
+    detail: 'Vessels: 28 | Drought impact easing',
+  },
+  {
+    name: 'Strait of Malacca',
+    status: 'NORMAL',
+    detail: 'Vessels: 65 | Normal traffic',
+  },
+  {
+    name: 'Bab el-Mandeb',
+    status: 'CRITICAL',
+    detail: 'Vessels: 12 | Houthi attacks ongoing',
+  },
+  {
+    name: 'Taiwan Strait',
+    status: 'ELEVATED',
+    detail: 'Vessels: 55 | Military exercises nearby',
+  },
+])
+
+const shippingIndices = ref([
+  { name: 'Baltic Dry Index', value: '1,842', change: '+2.3%', positive: true },
+  { name: 'Container Freight', value: '2,134', change: '-1.1%', positive: false },
+  { name: 'Harpex Index', value: '1,256', change: '+0.8%', positive: true },
+])
+
+function statusColor(status) {
+  if (status === 'CRITICAL') return '#ff4444'
+  if (status === 'ELEVATED') return '#ffaa00'
+  return '#44aa44'
+}
+</script>
+
+<style scoped>
+.sc-container {
+  overflow-y: auto;
+  flex: 1;
+}
+
+.sc-section__title {
+  padding: 8px 12px;
+  font-family: 'SF Mono', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--wm-text-dim, #888);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid var(--wm-border, #2a2a2a);
+}
+
+.sc-chokepoint {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--wm-border, #2a2a2a);
+  transition: background 0.15s ease;
+}
+
+.sc-chokepoint:hover {
+  background: var(--wm-surface-hover, #1e1e1e);
+}
+
+.sc-chokepoint__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.sc-chokepoint__name {
+  font-family: 'SF Mono', monospace;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--wm-text, #e8e8e8);
+}
+
+.sc-chokepoint__status {
+  font-family: 'SF Mono', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.sc-chokepoint__detail {
+  font-family: 'SF Mono', monospace;
+  font-size: 11px;
+  color: var(--wm-text-dim, #888);
+  padding-left: 2px;
+}
+
+.sc-divider {
+  height: 1px;
+  background: var(--wm-border, #2a2a2a);
+}
+
+.sc-index {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 12px;
+  border-bottom: 1px solid var(--wm-border, #2a2a2a);
+  transition: background 0.15s ease;
+}
+
+.sc-index:hover {
+  background: var(--wm-surface-hover, #1e1e1e);
+}
+
+.sc-index__name {
+  font-family: 'SF Mono', monospace;
+  font-size: 11px;
+  color: var(--wm-text-dim, #888);
+  flex: 1;
+}
+
+.sc-index__value {
+  font-family: 'SF Mono', monospace;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--wm-text, #e8e8e8);
+  min-width: 48px;
+  text-align: right;
+}
+
+.sc-index__change {
+  font-family: 'SF Mono', monospace;
+  font-size: 11px;
+  font-weight: 600;
+  min-width: 48px;
+  text-align: right;
+}
+
+.change-positive {
+  color: #44ff88;
+}
+
+.change-negative {
+  color: #ff4444;
+}
+</style>

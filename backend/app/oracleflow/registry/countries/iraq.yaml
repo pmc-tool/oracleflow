@@ -1,0 +1,23 @@
+country: Iraq
+code: IQ
+region: middle_east
+languages:
+  - ar
+  - ku
+timezone: Asia/Baghdad
+proxy_pool: ""
+
+sources:
+  government:
+    - url: https://www.pmo.iq
+      type: government_portal
+      frequency: "2h"
+
+  news: []
+  reddit: []
+  social: {}
+
+  political_entities:
+    - name: "Mohammed Shia al-Sudani"
+      type: person
+      role: "Prime Minister"

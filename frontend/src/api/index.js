@@ -12,6 +12,10 @@ const service = axios.create({
 // Request interceptor
 service.interceptors.request.use(
   config => {
+    const token = localStorage.getItem('of_token')
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`
+    }
     return config
   },
   error => {
@@ -34,7 +38,21 @@ service.interceptors.response.use(
     return res
   },
   error => {
-    console.error('Response error:', error)
+    // Handle 403 with upgrade flag — let it propagate so the component
+    // can show an upgrade prompt instead of redirecting to login.
+    if (error.response && error.response.status === 403 &&
+        error.response.data && error.response.data.upgrade) {
+      return Promise.reject(error)
+    }
+
+    // Handle 401 — clear stale token, redirect to login
+    if (error.response && error.response.status === 401) {
+      localStorage.removeItem('of_token')
+      if (window.location.pathname !== '/' && !window.location.pathname.startsWith('/login') && !window.location.pathname.startsWith('/register')) {
+        window.location.href = '/login'
+      }
+      return Promise.reject(error)
+    }
 
     // Handle timeout
     if (error.code === 'ECONNABORTED' && error.message.includes('timeout')) {

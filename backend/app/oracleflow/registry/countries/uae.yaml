@@ -1,0 +1,23 @@
+country: United Arab Emirates
+code: AE
+region: middle_east
+languages:
+  - ar
+  - en
+timezone: Asia/Dubai
+proxy_pool: ""
+
+sources:
+  government:
+    - url: https://u.ae
+      type: government_portal
+      frequency: "2h"
+
+  news: []
+  reddit: []
+  social: {}
+
+  political_entities:
+    - name: "Mohammed bin Zayed Al Nahyan"
+      type: person
+      role: "President"

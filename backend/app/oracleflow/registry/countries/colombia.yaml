@@ -1,0 +1,22 @@
+country: Colombia
+code: CO
+region: south_america
+languages:
+  - es
+timezone: America/Bogota
+proxy_pool: ""
+
+sources:
+  government:
+    - url: https://www.gov.co
+      type: government_portal
+      frequency: "2h"
+
+  news: []
+  reddit: []
+  social: {}
+
+  political_entities:
+    - name: "Gustavo Petro"
+      type: person
+      role: "President"

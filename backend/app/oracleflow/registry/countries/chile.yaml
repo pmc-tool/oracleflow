@@ -1,0 +1,22 @@
+country: Chile
+code: CL
+region: south_america
+languages:
+  - es
+timezone: America/Santiago
+proxy_pool: ""
+
+sources:
+  government:
+    - url: https://www.gob.cl
+      type: government_portal
+      frequency: "2h"
+
+  news: []
+  reddit: []
+  social: {}
+
+  political_entities:
+    - name: "Gabriel Boric"
+      type: person
+      role: "President"

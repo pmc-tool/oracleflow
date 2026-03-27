@@ -1,0 +1,42 @@
+# Country Source Registry — Template
+# Copy this file, rename it to your country (e.g., "mexico.yaml"),
+# and fill in the fields below.
+#
+# country: Full Country Name
+# code: XX                          # ISO 3166-1 alpha-2 code
+# region: region_name               # e.g., caribbean, north_america, south_asia
+# languages:
+#   - en                            # ISO 639-1 language codes
+# timezone: Continent/City          # IANA timezone
+# proxy_pool: ""                    # optional proxy pool name
+#
+# sources:
+#   news:
+#     - url: https://example.com
+#       frequency: "15m"            # 5m, 15m, 30m, 2h, 6h, 7d
+#       anti_bot: low               # low, medium, high
+#       selectors:
+#         headline: "h1.headline"
+#         body: "div.article-body"
+#
+#   reddit:
+#     - subreddit: r/example
+#       frequency: "15m"
+#
+#   government:
+#     - url: https://gov.example.com
+#       type: parliament             # parliament, legislature, executive, national_portal
+#       frequency: "2h"
+#
+#   social:
+#     facebook_pages:
+#       - PageName
+#     twitter_accounts:
+#       - "@handle"
+#
+#   political_entities:
+#     - name: Party Full Name
+#       aliases:
+#         - ABBREV
+#       website: https://party.example.com
+#       leader: Leader Name

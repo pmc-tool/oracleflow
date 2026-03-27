@@ -1,0 +1,25 @@
+country: Italy
+code: IT
+region: europe
+languages:
+  - it
+timezone: Europe/Rome
+proxy_pool: ""
+
+sources:
+  government:
+    - url: https://www.governo.it
+      type: government_portal
+      frequency: "2h"
+    - url: https://www.camera.it
+      type: legislature
+      frequency: "2h"
+
+  news: []
+  reddit: []
+  social: {}
+
+  political_entities:
+    - name: "Giorgia Meloni"
+      type: person
+      role: "Prime Minister"

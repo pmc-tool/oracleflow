@@ -1,0 +1,25 @@
+country: Japan
+code: JP
+region: east_asia
+languages:
+  - ja
+timezone: Asia/Tokyo
+proxy_pool: ""
+
+sources:
+  government:
+    - url: https://www.kantei.go.jp
+      type: government_portal
+      frequency: "2h"
+    - url: https://www.shugiin.go.jp
+      type: legislature
+      frequency: "2h"
+
+  news: []
+  reddit: []
+  social: {}
+
+  political_entities:
+    - name: "Shigeru Ishiba"
+      type: person
+      role: "Prime Minister"

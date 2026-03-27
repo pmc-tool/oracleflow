@@ -1,0 +1,25 @@
+country: Australia
+code: AU
+region: oceania
+languages:
+  - en
+timezone: Australia/Sydney
+proxy_pool: ""
+
+sources:
+  government:
+    - url: https://www.pm.gov.au
+      type: government_portal
+      frequency: "2h"
+    - url: https://www.aph.gov.au
+      type: legislature
+      frequency: "2h"
+
+  news: []
+  reddit: []
+  social: {}
+
+  political_entities:
+    - name: "Anthony Albanese"
+      type: person
+      role: "Prime Minister"

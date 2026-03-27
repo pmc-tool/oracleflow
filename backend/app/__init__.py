@@ -9,7 +9,7 @@ import warnings
 # Must be set before all other imports
 warnings.filterwarnings("ignore", message=".*resource_tracker.*")
 
-from flask import Flask, request
+from flask import Flask, jsonify, request
 from flask_cors import CORS
 
 from .config import Config
@@ -40,7 +40,7 @@ def create_app(config_class=Config):
         logger.info("=" * 50)
 
     # Enable CORS
-    CORS(app, resources={r"/api/*": {"origins": "*"}})
+    CORS(app, resources={r"/api/*": {"origins": ["http://localhost:3000", "http://localhost:3002", "http://localhost:5173", os.environ.get("FRONTEND_URL", "http://localhost:3002")]}})
 
     # --- Initialize Neo4jStorage singleton (DI via app.extensions) ---
     from .storage import Neo4jStorage
@@ -53,6 +53,11 @@ def create_app(config_class=Config):
         logger.error("Neo4jStorage initialization failed: %s", e)
         # Store None so endpoints can return 503 gracefully
         app.extensions['neo4j_storage'] = None
+
+    # Initialize OracleFlow SQL database
+    from .oracleflow.database import init_db, close_session
+    init_db(app)
+    app.teardown_appcontext(close_session)
 
     # Register simulation process cleanup function (ensure all simulation processes terminate on server shutdown)
     from .services.simulation_runner import SimulationRunner
@@ -79,6 +84,44 @@ def create_app(config_class=Config):
     app.register_blueprint(graph_bp, url_prefix='/api/graph')
     app.register_blueprint(simulation_bp, url_prefix='/api/simulation')
     app.register_blueprint(report_bp, url_prefix='/api/report')
+
+    # OracleFlow Intelligence Blueprints
+    from .oracleflow.api import (
+        sites_bp, signals_bp, chaos_bp,
+        entities_bp, countries_bp, alerts_bp,
+    )
+    app.register_blueprint(sites_bp, url_prefix='/api/sites')
+    app.register_blueprint(signals_bp, url_prefix='/api/signals')
+    app.register_blueprint(chaos_bp, url_prefix='/api/chaos')
+    app.register_blueprint(entities_bp, url_prefix='/api/entities')
+    app.register_blueprint(countries_bp, url_prefix='/api/countries')
+    app.register_blueprint(alerts_bp, url_prefix='/api/alerts')
+
+    # OracleFlow Auth Blueprint
+    from .oracleflow.auth import auth_bp
+    from .oracleflow.auth import models as auth_models  # noqa: F841 — ensure tables are created
+    app.register_blueprint(auth_bp, url_prefix='/api/auth')
+
+    # OracleFlow Billing Blueprint
+    from .oracleflow.billing import billing_bp
+    app.register_blueprint(billing_bp, url_prefix='/api/billing')
+
+    # Start OracleFlow background scheduler
+    from .oracleflow.scheduler import start_scheduler
+    start_scheduler(app)
+
+    # Global error handlers
+    @app.errorhandler(404)
+    def not_found(e):
+        return jsonify({"success": False, "error": "Not found"}), 404
+
+    @app.errorhandler(500)
+    def internal_error(e):
+        return jsonify({"success": False, "error": "Internal server error"}), 500
+
+    @app.errorhandler(405)
+    def method_not_allowed(e):
+        return jsonify({"success": False, "error": "Method not allowed"}), 405
 
     # Health check
     @app.route('/health')

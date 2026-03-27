@@ -1,0 +1,25 @@
+country: Mexico
+code: MX
+region: north_america
+languages:
+  - es
+timezone: America/Mexico_City
+proxy_pool: ""
+
+sources:
+  government:
+    - url: https://www.gob.mx
+      type: government_portal
+      frequency: "2h"
+    - url: https://www.diputados.gob.mx
+      type: legislature
+      frequency: "2h"
+
+  news: []
+  reddit: []
+  social: {}
+
+  political_entities:
+    - name: "Claudia Sheinbaum"
+      type: person
+      role: "President"

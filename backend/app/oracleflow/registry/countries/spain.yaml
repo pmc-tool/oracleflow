@@ -1,0 +1,25 @@
+country: Spain
+code: ES
+region: europe
+languages:
+  - es
+timezone: Europe/Madrid
+proxy_pool: ""
+
+sources:
+  government:
+    - url: https://www.lamoncloa.gob.es
+      type: government_portal
+      frequency: "2h"
+    - url: https://www.congreso.es
+      type: legislature
+      frequency: "2h"
+
+  news: []
+  reddit: []
+  social: {}
+
+  political_entities:
+    - name: "Pedro Sanchez"
+      type: person
+      role: "Prime Minister"

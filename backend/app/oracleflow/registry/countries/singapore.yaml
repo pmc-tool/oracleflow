@@ -1,0 +1,25 @@
+country: Singapore
+code: SG
+region: southeast_asia
+languages:
+  - en
+  - ms
+  - zh
+  - ta
+timezone: Asia/Singapore
+proxy_pool: ""
+
+sources:
+  government:
+    - url: https://www.gov.sg
+      type: government_portal
+      frequency: "2h"
+
+  news: []
+  reddit: []
+  social: {}
+
+  political_entities:
+    - name: "Lawrence Wong"
+      type: person
+      role: "Prime Minister"

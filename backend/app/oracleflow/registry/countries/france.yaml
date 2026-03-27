@@ -1,0 +1,25 @@
+country: France
+code: FR
+region: europe
+languages:
+  - fr
+timezone: Europe/Paris
+proxy_pool: ""
+
+sources:
+  government:
+    - url: https://www.elysee.fr
+      type: government_portal
+      frequency: "2h"
+    - url: https://www.assemblee-nationale.fr
+      type: legislature
+      frequency: "2h"
+
+  news: []
+  reddit: []
+  social: {}
+
+  political_entities:
+    - name: "Emmanuel Macron"
+      type: person
+      role: "President"

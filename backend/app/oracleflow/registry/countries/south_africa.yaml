@@ -1,0 +1,30 @@
+country: South Africa
+code: ZA
+region: africa
+languages:
+  - en
+  - af
+  - zu
+timezone: Africa/Johannesburg
+proxy_pool: ""
+
+sources:
+  government:
+    - url: https://www.gov.za
+      type: government_portal
+      frequency: "2h"
+    - url: https://www.parliament.gov.za
+      type: legislature
+      frequency: "2h"
+
+  news: []
+  reddit: []
+  social: {}
+
+  political_entities:
+    - name: "Cyril Ramaphosa"
+      type: person
+      role: "President"
+    - name: "African National Congress"
+      type: political_party
+      role: "Ruling Party"

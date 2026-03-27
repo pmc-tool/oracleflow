@@ -1,0 +1,22 @@
+country: Indonesia
+code: ID
+region: southeast_asia
+languages:
+  - id
+timezone: Asia/Jakarta
+proxy_pool: ""
+
+sources:
+  government:
+    - url: https://www.indonesia.go.id
+      type: government_portal
+      frequency: "2h"
+
+  news: []
+  reddit: []
+  social: {}
+
+  political_entities:
+    - name: "Prabowo Subianto"
+      type: person
+      role: "President"

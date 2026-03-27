@@ -1,0 +1,57 @@
+country: Barbados
+code: BB
+region: caribbean
+languages:
+  - en
+timezone: America/Barbados
+proxy_pool: caribbean
+
+sources:
+  news:
+    - url: https://www.barbadostoday.bb
+      frequency: "15m"
+      anti_bot: low
+      selectors:
+        headline: "h1.entry-title"
+        body: "div.entry-content"
+
+    - url: https://www.nationnews.com
+      frequency: "15m"
+      anti_bot: low
+      selectors:
+        headline: "h1.article-title"
+        body: "div.article-body"
+
+    - url: https://www.loopnewsbarbados.com
+      frequency: "15m"
+      anti_bot: medium
+      selectors:
+        headline: "h1.story-title"
+        body: "div.story-body"
+
+  reddit:
+    - subreddit: r/barbados
+      frequency: "15m"
+
+  government: []
+
+  social:
+    facebook_pages:
+      - BarbadosToday
+      - NationNewsBB
+    twitter_accounts:
+      - "@BarbadosToday"
+      - "@NationNewsBB"
+
+  political_entities:
+    - name: Barbados Labour Party
+      aliases:
+        - BLP
+      website: https://www.blp.org.bb
+      leader: Mia Mottley
+
+    - name: Democratic Labour Party
+      aliases:
+        - DLP
+      website: https://www.dlp.org.bb
+      leader: Verla De Peiza

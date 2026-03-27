@@ -1,0 +1,24 @@
+country: Switzerland
+code: CH
+region: europe
+languages:
+  - de
+  - fr
+  - it
+timezone: Europe/Zurich
+proxy_pool: ""
+
+sources:
+  government:
+    - url: https://www.admin.ch
+      type: government_portal
+      frequency: "2h"
+
+  news: []
+  reddit: []
+  social: {}
+
+  political_entities:
+    - name: "Karin Keller-Sutter"
+      type: person
+      role: "President of the Confederation"

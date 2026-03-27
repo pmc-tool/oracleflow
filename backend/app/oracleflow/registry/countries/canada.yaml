@@ -1,0 +1,26 @@
+country: Canada
+code: CA
+region: north_america
+languages:
+  - en
+  - fr
+timezone: America/Toronto
+proxy_pool: ""
+
+sources:
+  government:
+    - url: https://www.canada.ca
+      type: government_portal
+      frequency: "2h"
+    - url: https://www.parl.ca
+      type: legislature
+      frequency: "2h"
+
+  news: []
+  reddit: []
+  social: {}
+
+  political_entities:
+    - name: "Mark Carney"
+      type: person
+      role: "Prime Minister"

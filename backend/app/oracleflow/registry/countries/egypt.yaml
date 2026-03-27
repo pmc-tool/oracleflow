@@ -1,0 +1,22 @@
+country: Egypt
+code: EG
+region: middle_east
+languages:
+  - ar
+timezone: Africa/Cairo
+proxy_pool: ""
+
+sources:
+  government:
+    - url: https://www.presidency.eg
+      type: government_portal
+      frequency: "2h"
+
+  news: []
+  reddit: []
+  social: {}
+
+  political_entities:
+    - name: "Abdel Fattah al-Sisi"
+      type: person
+      role: "President"

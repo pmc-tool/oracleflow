@@ -1,0 +1,22 @@
+country: Bangladesh
+code: BD
+region: south_asia
+languages:
+  - bn
+timezone: Asia/Dhaka
+proxy_pool: ""
+
+sources:
+  government:
+    - url: https://www.bangladesh.gov.bd
+      type: government_portal
+      frequency: "2h"
+
+  news: []
+  reddit: []
+  social: {}
+
+  political_entities:
+    - name: "Muhammad Yunus"
+      type: person
+      role: "Chief Adviser"

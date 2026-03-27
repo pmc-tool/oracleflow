@@ -1,0 +1,69 @@
+country: Jamaica
+code: JM
+region: caribbean
+languages:
+  - en
+timezone: America/Jamaica
+proxy_pool: caribbean
+
+sources:
+  news:
+    - url: https://www.jamaicaobserver.com
+      frequency: "15m"
+      anti_bot: low
+      selectors:
+        headline: "h1.headline"
+        body: "div.article-body"
+
+    - url: https://jamaica-gleaner.com
+      frequency: "15m"
+      anti_bot: low
+      selectors:
+        headline: "h1.node-title"
+        body: "div.field-name-body"
+
+    - url: https://www.loopjamaica.com
+      frequency: "15m"
+      anti_bot: medium
+      selectors:
+        headline: "h1.story-title"
+        body: "div.story-body"
+
+    - url: https://www.rjrnewsonline.com
+      frequency: "30m"
+      anti_bot: low
+      selectors:
+        headline: "h1.entry-title"
+        body: "div.entry-content"
+
+  reddit:
+    - subreddit: r/jamaica
+      frequency: "15m"
+
+  government:
+    - url: https://www.japarliament.gov.jm
+      type: parliament
+      frequency: "2h"
+
+  social:
+    facebook_pages:
+      - JamaicaObserverOfficial
+      - TVJnews
+    twitter_accounts:
+      - "@JamaicaObserver"
+      - "@JamaicaGleaner"
+      - "@TVaborJamaica"
+      - "@RJRNewsOnline"
+
+  political_entities:
+    - name: Jamaica Labour Party
+      aliases:
+        - JLP
+      website: https://www.jlp.org.jm
+      leader: Andrew Holness
+
+    - name: People's National Party
+      aliases:
+        - PNP
+      website: https://www.pnpjamaica.com
+      leader: Mark Golding

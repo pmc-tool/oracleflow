@@ -1,0 +1,22 @@
+country: Vietnam
+code: VN
+region: southeast_asia
+languages:
+  - vi
+timezone: Asia/Ho_Chi_Minh
+proxy_pool: ""
+
+sources:
+  government:
+    - url: https://www.chinhphu.vn
+      type: government_portal
+      frequency: "2h"
+
+  news: []
+  reddit: []
+  social: {}
+
+  political_entities:
+    - name: "To Lam"
+      type: person
+      role: "General Secretary"

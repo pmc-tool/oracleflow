@@ -1,0 +1,60 @@
+country: Trinidad and Tobago
+code: TT
+region: caribbean
+languages:
+  - en
+timezone: America/Port_of_Spain
+proxy_pool: caribbean
+
+sources:
+  news:
+    - url: https://www.guardian.co.tt
+      frequency: "15m"
+      anti_bot: low
+      selectors:
+        headline: "h1.entry-title"
+        body: "div.entry-content"
+
+    - url: https://trinidadexpress.com
+      frequency: "15m"
+      anti_bot: low
+      selectors:
+        headline: "h1.article-title"
+        body: "div.article-content"
+
+    - url: https://www.looptt.com
+      frequency: "15m"
+      anti_bot: medium
+      selectors:
+        headline: "h1.story-title"
+        body: "div.story-body"
+
+  reddit:
+    - subreddit: r/trinidadandtobago
+      frequency: "15m"
+
+  government:
+    - url: https://www.ttparliament.org
+      type: parliament
+      frequency: "2h"
+
+  social:
+    facebook_pages:
+      - trinidadguardian
+      - TrinidadExpress
+    twitter_accounts:
+      - "@TTGuardian"
+      - "@expresstt"
+
+  political_entities:
+    - name: People's National Movement
+      aliases:
+        - PNM
+      website: https://www.pnm.org.tt
+      leader: Keith Rowley
+
+    - name: United National Congress
+      aliases:
+        - UNC
+      website: https://www.unc.org.tt
+      leader: Kamla Persad-Bissessar

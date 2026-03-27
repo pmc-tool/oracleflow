@@ -1,0 +1,23 @@
+country: Pakistan
+code: PK
+region: south_asia
+languages:
+  - ur
+  - en
+timezone: Asia/Karachi
+proxy_pool: ""
+
+sources:
+  government:
+    - url: https://www.pakistan.gov.pk
+      type: government_portal
+      frequency: "2h"
+
+  news: []
+  reddit: []
+  social: {}
+
+  political_entities:
+    - name: "Shehbaz Sharif"
+      type: person
+      role: "Prime Minister"

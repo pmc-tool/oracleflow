@@ -1,0 +1,25 @@
+country: Sweden
+code: SE
+region: europe
+languages:
+  - sv
+timezone: Europe/Stockholm
+proxy_pool: ""
+
+sources:
+  government:
+    - url: https://www.government.se
+      type: government_portal
+      frequency: "2h"
+    - url: https://www.riksdagen.se
+      type: legislature
+      frequency: "2h"
+
+  news: []
+  reddit: []
+  social: {}
+
+  political_entities:
+    - name: "Ulf Kristersson"
+      type: person
+      role: "Prime Minister"

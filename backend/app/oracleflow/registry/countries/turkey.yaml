@@ -1,0 +1,28 @@
+country: Turkey
+code: TR
+region: middle_east
+languages:
+  - tr
+timezone: Europe/Istanbul
+proxy_pool: ""
+
+sources:
+  government:
+    - url: https://www.tccb.gov.tr
+      type: government_portal
+      frequency: "2h"
+    - url: https://www.tbmm.gov.tr
+      type: legislature
+      frequency: "2h"
+
+  news: []
+  reddit: []
+  social: {}
+
+  political_entities:
+    - name: "Recep Tayyip Erdogan"
+      type: person
+      role: "President"
+    - name: "AKP"
+      type: political_party
+      role: "Ruling Party"

@@ -1,0 +1,22 @@
+country: Thailand
+code: TH
+region: southeast_asia
+languages:
+  - th
+timezone: Asia/Bangkok
+proxy_pool: ""
+
+sources:
+  government:
+    - url: https://www.thaigov.go.th
+      type: government_portal
+      frequency: "2h"
+
+  news: []
+  reddit: []
+  social: {}
+
+  political_entities:
+    - name: "Paetongtarn Shinawatra"
+      type: person
+      role: "Prime Minister"

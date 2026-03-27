@@ -1,0 +1,69 @@
+country: India
+code: IN
+region: south_asia
+languages:
+  - en
+  - hi
+timezone: Asia/Kolkata
+proxy_pool: india
+
+sources:
+  news:
+    - url: https://timesofindia.indiatimes.com
+      frequency: "15m"
+      anti_bot: medium
+      selectors:
+        headline: "h1.HNMDR"
+        body: "div._s30J"
+
+    - url: https://www.ndtv.com
+      frequency: "15m"
+      anti_bot: medium
+      selectors:
+        headline: "h1.sp-ttl"
+        body: "div.sp-cn"
+
+    - url: https://www.thehindu.com
+      frequency: "15m"
+      anti_bot: low
+      selectors:
+        headline: "h1.title"
+        body: "div.articlebodycontent"
+
+  reddit:
+    - subreddit: r/india
+      frequency: "15m"
+    - subreddit: r/IndiaSpeaks
+      frequency: "15m"
+
+  government:
+    - url: https://www.india.gov.in
+      type: national_portal
+      frequency: "2h"
+    - url: https://sansad.in
+      type: parliament
+      frequency: "2h"
+
+  social:
+    facebook_pages:
+      - TimesofIndia
+      - NDTV
+      - TheHindu
+    twitter_accounts:
+      - "@timesofindia"
+      - "@ndtv"
+      - "@the_hindu"
+
+  political_entities:
+    - name: Bharatiya Janata Party
+      aliases:
+        - BJP
+      website: https://www.bjp.org
+      leader: Narendra Modi
+
+    - name: Indian National Congress
+      aliases:
+        - INC
+        - Congress
+      website: https://www.inc.in
+      leader: Mallikarjun Kharge

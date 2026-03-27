@@ -1,0 +1,22 @@
+country: Argentina
+code: AR
+region: south_america
+languages:
+  - es
+timezone: America/Argentina/Buenos_Aires
+proxy_pool: ""
+
+sources:
+  government:
+    - url: https://www.argentina.gob.ar
+      type: government_portal
+      frequency: "2h"
+
+  news: []
+  reddit: []
+  social: {}
+
+  political_entities:
+    - name: "Javier Milei"
+      type: person
+      role: "President"

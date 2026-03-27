@@ -1,0 +1,23 @@
+country: Kenya
+code: KE
+region: africa
+languages:
+  - en
+  - sw
+timezone: Africa/Nairobi
+proxy_pool: ""
+
+sources:
+  government:
+    - url: https://www.president.go.ke
+      type: government_portal
+      frequency: "2h"
+
+  news: []
+  reddit: []
+  social: {}
+
+  political_entities:
+    - name: "William Ruto"
+      type: person
+      role: "President"

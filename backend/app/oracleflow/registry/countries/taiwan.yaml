@@ -1,0 +1,25 @@
+country: Taiwan
+code: TW
+region: east_asia
+languages:
+  - zh
+timezone: Asia/Taipei
+proxy_pool: ""
+
+sources:
+  government:
+    - url: https://www.president.gov.tw
+      type: government_portal
+      frequency: "2h"
+    - url: https://www.ly.gov.tw
+      type: legislature
+      frequency: "2h"
+
+  news: []
+  reddit: []
+  social: {}
+
+  political_entities:
+    - name: "Lai Ching-te"
+      type: person
+      role: "President"

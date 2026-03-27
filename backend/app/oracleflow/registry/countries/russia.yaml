@@ -1,0 +1,28 @@
+country: Russia
+code: RU
+region: europe
+languages:
+  - ru
+timezone: Europe/Moscow
+proxy_pool: ""
+
+sources:
+  government:
+    - url: http://government.ru
+      type: government_portal
+      frequency: "2h"
+    - url: http://duma.gov.ru
+      type: legislature
+      frequency: "2h"
+
+  news: []
+  reddit: []
+  social: {}
+
+  political_entities:
+    - name: "Vladimir Putin"
+      type: person
+      role: "President"
+    - name: "United Russia"
+      type: political_party
+      role: "Ruling Party"

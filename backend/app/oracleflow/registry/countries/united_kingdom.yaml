@@ -1,0 +1,28 @@
+country: United Kingdom
+code: GB
+region: europe
+languages:
+  - en
+timezone: Europe/London
+proxy_pool: ""
+
+sources:
+  government:
+    - url: https://www.gov.uk
+      type: government_portal
+      frequency: "2h"
+    - url: https://www.parliament.uk
+      type: legislature
+      frequency: "2h"
+
+  news: []
+  reddit: []
+  social: {}
+
+  political_entities:
+    - name: "King Charles III"
+      type: person
+      role: "Head of State"
+    - name: "Keir Starmer"
+      type: person
+      role: "Prime Minister"

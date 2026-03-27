@@ -1,0 +1,23 @@
+country: Afghanistan
+code: AF
+region: south_asia
+languages:
+  - ps
+  - fa
+timezone: Asia/Kabul
+proxy_pool: ""
+
+sources:
+  government:
+    - url: https://www.alemarah-english.net
+      type: government_portal
+      frequency: "2h"
+
+  news: []
+  reddit: []
+  social: {}
+
+  political_entities:
+    - name: "Hibatullah Akhundzada"
+      type: person
+      role: "Supreme Leader"

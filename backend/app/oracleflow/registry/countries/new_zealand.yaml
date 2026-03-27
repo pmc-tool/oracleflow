@@ -1,0 +1,26 @@
+country: New Zealand
+code: NZ
+region: oceania
+languages:
+  - en
+  - mi
+timezone: Pacific/Auckland
+proxy_pool: ""
+
+sources:
+  government:
+    - url: https://www.govt.nz
+      type: government_portal
+      frequency: "2h"
+    - url: https://www.parliament.nz
+      type: legislature
+      frequency: "2h"
+
+  news: []
+  reddit: []
+  social: {}
+
+  political_entities:
+    - name: "Christopher Luxon"
+      type: person
+      role: "Prime Minister"

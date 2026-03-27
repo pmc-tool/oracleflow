@@ -1,0 +1,22 @@
+country: Iran
+code: IR
+region: middle_east
+languages:
+  - fa
+timezone: Asia/Tehran
+proxy_pool: ""
+
+sources:
+  government:
+    - url: https://www.president.ir
+      type: government_portal
+      frequency: "2h"
+
+  news: []
+  reddit: []
+  social: {}
+
+  political_entities:
+    - name: "Ali Khamenei"
+      type: person
+      role: "Supreme Leader"

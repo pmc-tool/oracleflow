@@ -1,0 +1,28 @@
+country: China
+code: CN
+region: east_asia
+languages:
+  - zh
+timezone: Asia/Shanghai
+proxy_pool: ""
+
+sources:
+  government:
+    - url: https://www.gov.cn
+      type: government_portal
+      frequency: "2h"
+    - url: http://www.npc.gov.cn
+      type: legislature
+      frequency: "2h"
+
+  news: []
+  reddit: []
+  social: {}
+
+  political_entities:
+    - name: "Xi Jinping"
+      type: person
+      role: "President"
+    - name: "Chinese Communist Party"
+      type: political_party
+      role: "Ruling Party"

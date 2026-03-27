@@ -69,6 +69,16 @@ class Config:
     REPORT_AGENT_MAX_REFLECTION_ROUNDS = int(os.environ.get('REPORT_AGENT_MAX_REFLECTION_ROUNDS', '2'))
     REPORT_AGENT_TEMPERATURE = float(os.environ.get('REPORT_AGENT_TEMPERATURE', '0.5'))
 
+    # OracleFlow Database
+    DATABASE_URL = os.environ.get('DATABASE_URL', 'sqlite:///oracleflow.db')
+
+    # OracleFlow Settings
+    OF_VERIFY_SSL = os.environ.get('OF_VERIFY_SSL', 'false').lower() == 'true'
+    OF_DEFAULT_DOWNLOAD_DELAY = float(os.environ.get('OF_DEFAULT_DOWNLOAD_DELAY', '1.0'))
+    OF_PIPELINE_INTERVAL = int(os.environ.get('OF_PIPELINE_INTERVAL', '300'))
+    OF_MONITORING_ENABLED = os.environ.get('OF_MONITORING_ENABLED', 'true').lower() == 'true'
+    OF_REGISTRY_DIR = os.environ.get('OF_REGISTRY_DIR', os.path.join(os.path.dirname(__file__), 'oracleflow/registry/countries'))
+
     @classmethod
     def validate(cls):
         """Validate required configuration"""

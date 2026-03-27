@@ -1,0 +1,23 @@
+country: Malaysia
+code: MY
+region: southeast_asia
+languages:
+  - ms
+  - en
+timezone: Asia/Kuala_Lumpur
+proxy_pool: ""
+
+sources:
+  government:
+    - url: https://www.malaysia.gov.my
+      type: government_portal
+      frequency: "2h"
+
+  news: []
+  reddit: []
+  social: {}
+
+  political_entities:
+    - name: "Anwar Ibrahim"
+      type: person
+      role: "Prime Minister"

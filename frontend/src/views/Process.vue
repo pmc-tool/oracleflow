@@ -2,7 +2,7 @@
   <div class="process-page">
     <!-- Top navigation bar -->
     <nav class="navbar">
-      <div class="nav-brand" @click="goHome">MIROFISH OFFLINE</div>
+      <div class="nav-brand" @click="goHome">ORACLEFLOW</div>
       
       <!-- Center step indicator -->
       <div class="nav-center">
@@ -754,8 +754,6 @@ const fetchGraphData = async () => {
         const newNodeCount = newData.node_count || newData.nodes?.length || 0
         const oldNodeCount = graphData.value?.node_count || graphData.value?.nodes?.length || 0
 
-        console.log('Fetching graph data, nodes:', newNodeCount, 'edges:', newData.edge_count || newData.edges?.length || 0)
-
         // Update and re-render when data changes
         if (newNodeCount !== oldNodeCount || !graphData.value) {
           graphData.value = newData
@@ -765,7 +763,7 @@ const fetchGraphData = async () => {
       }
     }
   } catch (err) {
-    console.log('Graph data fetch:', err.message || 'not ready')
+    // Graph data not ready yet
   }
 }
 
@@ -794,10 +792,7 @@ const pollTaskStatus = async (taskId) => {
         message: task.message || 'Processing...'
       }
 
-      console.log('Task status:', task.status, 'Progress:', task.progress)
-
       if (task.status === 'completed') {
-        console.log('✅ Graph build complete, loading full data...')
         
         stopPolling()
         stopGraphPolling()
@@ -816,9 +811,7 @@ const pollTaskStatus = async (taskId) => {
 
           // Finally load complete graph data
           if (projectResponse.data.graph_id) {
-            console.log('📊 Loading complete graph:', projectResponse.data.graph_id)
             await loadGraph(projectResponse.data.graph_id)
-            console.log('✅ Graph load complete')
           }
         }
 
@@ -864,13 +857,13 @@ const loadGraph = async (graphId) => {
 // Render graph (D3.js)
 const renderGraph = () => {
   if (!graphSvg.value || !graphData.value) {
-    console.log('Cannot render: svg or data missing')
+    // Cannot render: svg or data missing
     return
   }
 
   const container = graphContainer.value
   if (!container) {
-    console.log('Cannot render: container missing')
+    // Cannot render: container missing
     return
   }
 
@@ -880,12 +873,10 @@ const renderGraph = () => {
   const height = (rect.height || 600) - 60
 
   if (width <= 0 || height <= 0) {
-    console.log('Cannot render: invalid dimensions', width, height)
+    // Cannot render: invalid dimensions
     return
   }
 
-  console.log('Rendering graph:', width, 'x', height)
-  
   const svg = d3.select(graphSvg.value)
     .attr('width', width)
     .attr('height', height)
@@ -898,7 +889,6 @@ const renderGraph = () => {
   const edgesData = graphData.value.edges || []
 
   if (nodesData.length === 0) {
-    console.log('No nodes to render')
     // Show empty state
     svg.append('text')
       .attr('x', width / 2)
@@ -937,8 +927,6 @@ const renderGraph = () => {
         target_name: nodeMap[e.target_node_uuid]?.name || 'Unknown'
       }
     }))
-
-  console.log('Nodes:', nodes.length, 'Edges:', edges.length)
 
   // Color mapping
   const types = [...new Set(nodes.map(n => n.type))]

@@ -1,0 +1,73 @@
+country: United States of America
+code: US
+region: north_america
+languages:
+  - en
+  - es
+timezone: America/New_York
+proxy_pool: us
+
+sources:
+  news:
+    - url: https://www.cnn.com
+      frequency: "15m"
+      anti_bot: high
+      selectors:
+        headline: "h1.pg-headline"
+        body: "div.article__content"
+
+    - url: https://www.reuters.com
+      frequency: "15m"
+      anti_bot: medium
+      selectors:
+        headline: "h1[data-testid='Heading']"
+        body: "div.article-body__content"
+
+    - url: https://apnews.com
+      frequency: "15m"
+      anti_bot: medium
+      selectors:
+        headline: "h1.Page-headline"
+        body: "div.RichTextStoryBody"
+
+  reddit:
+    - subreddit: r/politics
+      frequency: "15m"
+    - subreddit: r/news
+      frequency: "15m"
+    - subreddit: r/economics
+      frequency: "30m"
+
+  government:
+    - url: https://www.congress.gov
+      type: legislature
+      frequency: "2h"
+    - url: https://www.whitehouse.gov
+      type: executive
+      frequency: "2h"
+
+  social:
+    facebook_pages:
+      - CNN
+      - Reuters
+      - APNews
+    twitter_accounts:
+      - "@CNN"
+      - "@Reuters"
+      - "@AP"
+
+  political_entities:
+    - name: Democratic Party
+      aliases:
+        - Democrats
+        - DNC
+      website: https://democrats.org
+      leader: ""
+
+    - name: Republican Party
+      aliases:
+        - Republicans
+        - GOP
+        - RNC
+      website: https://www.gop.com
+      leader: ""

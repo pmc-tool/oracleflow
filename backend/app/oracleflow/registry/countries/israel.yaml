@@ -1,0 +1,26 @@
+country: Israel
+code: IL
+region: middle_east
+languages:
+  - he
+  - ar
+timezone: Asia/Jerusalem
+proxy_pool: ""
+
+sources:
+  government:
+    - url: https://www.gov.il
+      type: government_portal
+      frequency: "2h"
+    - url: https://www.knesset.gov.il
+      type: legislature
+      frequency: "2h"
+
+  news: []
+  reddit: []
+  social: {}
+
+  political_entities:
+    - name: "Benjamin Netanyahu"
+      type: person
+      role: "Prime Minister"

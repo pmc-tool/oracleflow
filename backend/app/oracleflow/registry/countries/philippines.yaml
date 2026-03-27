@@ -1,0 +1,23 @@
+country: Philippines
+code: PH
+region: southeast_asia
+languages:
+  - en
+  - tl
+timezone: Asia/Manila
+proxy_pool: ""
+
+sources:
+  government:
+    - url: https://www.officialgazette.gov.ph
+      type: government_portal
+      frequency: "2h"
+
+  news: []
+  reddit: []
+  social: {}
+
+  political_entities:
+    - name: "Ferdinand Marcos Jr."
+      type: person
+      role: "President"

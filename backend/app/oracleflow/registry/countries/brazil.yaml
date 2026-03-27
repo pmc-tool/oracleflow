@@ -1,0 +1,25 @@
+country: Brazil
+code: BR
+region: south_america
+languages:
+  - pt
+timezone: America/Sao_Paulo
+proxy_pool: ""
+
+sources:
+  government:
+    - url: https://www.gov.br
+      type: government_portal
+      frequency: "2h"
+    - url: https://www.camara.leg.br
+      type: legislature
+      frequency: "2h"
+
+  news: []
+  reddit: []
+  social: {}
+
+  political_entities:
+    - name: "Luiz Inacio Lula da Silva"
+      type: person
+      role: "President"

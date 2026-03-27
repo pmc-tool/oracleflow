@@ -1,0 +1,25 @@
+country: Germany
+code: DE
+region: europe
+languages:
+  - de
+timezone: Europe/Berlin
+proxy_pool: ""
+
+sources:
+  government:
+    - url: https://www.bundesregierung.de
+      type: government_portal
+      frequency: "2h"
+    - url: https://www.bundestag.de
+      type: legislature
+      frequency: "2h"
+
+  news: []
+  reddit: []
+  social: {}
+
+  political_entities:
+    - name: "Friedrich Merz"
+      type: person
+      role: "Chancellor"
