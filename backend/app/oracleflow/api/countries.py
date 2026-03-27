@@ -182,7 +182,14 @@ def get_country(code):
             display_name = COUNTRY_NAMES.get(country_code, country_code)
             signal_risk = round(float(row.avg_risk), 4) if row.avg_risk else 0.0
             baseline = BASELINE_RISK.get(country_code, _DEFAULT_BASELINE)
-            overall_risk = round(max(baseline, signal_risk), 4)
+            # Blend signal-derived risk with baseline based on signal count
+            sc = row.signal_count
+            if sc >= 20:
+                overall_risk = round(signal_risk * 0.7 + baseline * 0.3, 4)
+            elif sc >= 5:
+                overall_risk = round(signal_risk * 0.5 + baseline * 0.5, 4)
+            else:
+                overall_risk = round(signal_risk * 0.2 + baseline * 0.8, 4)
             data = {
                 "code": country_code,
                 "name": display_name,
@@ -241,7 +248,15 @@ def get_country_risk(code):
         signal_derived_risk = round(
             sum(s.anomaly_score for s in signals) / len(signals), 4
         )
-        overall_risk = round(max(baseline, signal_derived_risk), 4)
+        # Blend signal-derived risk with baseline based on signal count.
+        # More signals = more trust in signal data; fewer = lean on baseline.
+        signal_count = len(signals)
+        if signal_count >= 20:
+            overall_risk = round(signal_derived_risk * 0.7 + baseline * 0.3, 4)
+        elif signal_count >= 5:
+            overall_risk = round(signal_derived_risk * 0.5 + baseline * 0.5, 4)
+        else:
+            overall_risk = round(signal_derived_risk * 0.2 + baseline * 0.8, 4)
 
         data = {
             "country_code": country_code,

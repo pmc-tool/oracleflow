@@ -96,6 +96,10 @@ def list_signals():
         # Full-text keyword search on title and summary
         # For short terms (< 5 chars), use word-boundary matching to avoid
         # substring false positives (e.g. "APT" matching "capture").
+        # For acronyms that are also common English words, use case-sensitive
+        # matching to avoid false positives (e.g. "WHO" vs "who").
+        CASE_SENSITIVE_TERMS = {"WHO", "SEC", "FED", "ICE", "AID", "ARM"}
+
         if search:
             words = search.strip().split()
             if len(words) > 1:
@@ -105,6 +109,23 @@ def list_signals():
                     word_pattern = f"%{word}%"
                     conditions.append(or_(Signal.title.ilike(word_pattern), Signal.summary.ilike(word_pattern)))
                 search_filter = and_(*conditions)
+            elif search.upper() in CASE_SENSITIVE_TERMS and search == search.upper():
+                # Case-sensitive matching for acronyms that are common English words
+                search_term = search
+                patterns = [
+                    f'% {search_term} %',
+                    f'{search_term} %',
+                    f'% {search_term}',
+                    f'% {search_term}:%',
+                    f'% {search_term},%',
+                    f'% {search_term}.%',
+                    f'%-{search_term}%',
+                    f'%({search_term})%',
+                ]
+                # Use case-sensitive LIKE instead of ILIKE
+                conditions = [Signal.title.like(p) for p in patterns]
+                conditions += [Signal.summary.like(p) for p in patterns]
+                search_filter = or_(*conditions)
             elif len(search) < 5:
                 search_term = search
                 # Match at word boundaries — start of text, after space/punctuation,

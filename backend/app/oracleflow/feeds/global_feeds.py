@@ -362,6 +362,13 @@ GLOBAL_FEEDS = [
     ("https://www.nhc.noaa.gov/index-at.xml", "climate", "NHC Atlantic Hurricane"),
     ("https://www.nhc.noaa.gov/index-ep.xml", "climate", "NHC East Pacific Hurricane"),
     ("https://googleprojectzero.blogspot.com/feeds/posts/default", "cyber", "Google Project Zero"),
+
+    # === INVESTIGATIVE JOURNALISM (Round 7 gap: "money laundering", "whistleblower") ===
+    ("https://www.occrp.org/en/rss", "crime", "OCCRP"),
+    ("https://www.icij.org/feed/", "crime", "ICIJ"),
+    ("https://www.bellingcat.com/feed/", "geopolitical", "Bellingcat"),
+    ("https://www.propublica.org/feeds/propublica/main", "crime", "ProPublica"),
+    ("https://www.transparency.org/en/rss", "crime", "Transparency International"),
 ]
 
 # Total: 279 feeds across 12+ categories (includes humanitarian, supply chain, agriculture, regulatory, weather, healthcare/biotech, AI/tech, maritime & macro econ packs)

@@ -76,6 +76,9 @@ SOURCE_TIERS: dict[str, float] = {
     "Africanews": 0.6, "News24 South Africa": 0.6, "AllAfrica": 0.6,
     "Premium Times Nigeria": 0.6, "Vanguard Nigeria": 0.6,
     "Good News Network": 0.6, "Positive News": 0.6,
+    # Investigative journalism
+    "OCCRP": 0.8, "ICIJ": 0.8, "ProPublica": 0.8,
+    "Transparency International": 0.75,
 }
 
 # Default importance for sources not listed above

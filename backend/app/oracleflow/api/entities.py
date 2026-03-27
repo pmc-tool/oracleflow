@@ -82,8 +82,10 @@ def get_entity(entity_id):
                 joinedload(Entity.outgoing_relationships),
                 joinedload(Entity.incoming_relationships),
             )
-            .where(Entity.id == entity_id,
-                   Entity.organization_id == g.org_id)
+            .where(
+                Entity.id == entity_id,
+                or_(Entity.organization_id == g.org_id, Entity.organization_id.is_(None)),
+            )
         )
         result = db.execute(stmt)
         entity = result.unique().scalar_one_or_none()

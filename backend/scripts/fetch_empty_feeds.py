@@ -200,6 +200,12 @@ ALL_FEEDS = [
     # Weather
     ("https://alerts.weather.gov/cap/us.php?x=0", "climate", "NOAA Weather Alerts"),
     ("https://googleprojectzero.blogspot.com/feeds/posts/default", "cyber", "Google Project Zero"),
+    # Investigative journalism
+    ("https://www.occrp.org/en/rss", "crime", "OCCRP"),
+    ("https://www.icij.org/feed/", "crime", "ICIJ"),
+    ("https://www.bellingcat.com/feed/", "geopolitical", "Bellingcat"),
+    ("https://www.propublica.org/feeds/propublica/main", "crime", "ProPublica"),
+    ("https://www.transparency.org/en/rss", "crime", "Transparency International"),
 ]
 
 
@@ -272,18 +278,16 @@ def _estimate_anomaly(text_str: str) -> float:
     return 0.25
 
 
+from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
+_vader = SentimentIntensityAnalyzer()
+
+
 def _estimate_sentiment(text_str: str) -> float:
-    t = text_str.lower()
-    neg = ["kill", "attack", "crash", "crisis", "war", "bomb", "death", "collapse",
-           "threat", "sanction", "strike", "invasion", "earthquake", "flood",
-           "ransomware", "breach", "hack", "explosion", "conflict", "famine"]
-    pos = ["peace", "agreement", "growth", "recovery", "breakthrough", "ceasefire",
-           "cooperation", "aid", "progress", "reform", "success"]
-    n = sum(1 for kw in neg if kw in t)
-    p = sum(1 for kw in pos if kw in t)
-    if n + p == 0:
+    """VADER-based sentiment scorer. Returns compound score in [-1.0, 1.0]."""
+    if not text_str:
         return 0.0
-    return round((p - n) / (p + n), 2)
+    scores = _vader.polarity_scores(text_str)
+    return round(scores['compound'], 2)
 
 
 def main():
