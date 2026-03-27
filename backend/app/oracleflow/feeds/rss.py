@@ -101,11 +101,54 @@ def _content_importance(title: str) -> float:
     return adjustment
 
 
-def _importance_for_source(source_name: str, title: str = '') -> float:
-    """Compute importance from source tier + content keywords, clamped to [0.1, 1.0]."""
-    base = SOURCE_TIERS.get(source_name, _DEFAULT_IMPORTANCE)
-    adjustment = _content_importance(title) if title else 0.0
-    return round(max(0.1, min(1.0, base + adjustment)), 2)
+def _importance_for_source(source_name: str, title: str = '',
+                           anomaly_score: float = 0.0,
+                           entity_count: int = 0,
+                           signal_age_hours: float = 0.0) -> float:
+    """Compute importance from source tier + content + anomaly + entity count + freshness.
+
+    Components (weights sum to 1.0):
+      - Source tier base:  40%  (0.1-0.9 from SOURCE_TIERS)
+      - Content keywords:  15%  (breaking/analysis/opinion adjustments)
+      - Anomaly score:     20%  (higher anomaly = more important)
+      - Entity richness:   10%  (more entities = more newsworthy, caps at 5)
+      - Freshness:         15%  (newer = more important, decays over 24h)
+
+    This ensures signals spread across the full 0.1-1.0 range instead of
+    clustering at 0.8.
+    """
+    # Source tier component (0.1 - 0.9)
+    source_base = SOURCE_TIERS.get(source_name, _DEFAULT_IMPORTANCE)
+
+    # Content keyword component (returns -0.05 to 0.15)
+    content_adj = _content_importance(title) if title else 0.0
+    # Normalize to 0-1 range: shift from [-0.05, 0.15] to [0, 0.2] then scale to [0, 1]
+    content_component = max(0.0, min(1.0, (content_adj + 0.05) / 0.2))
+
+    # Anomaly component (already 0-1)
+    anomaly_component = max(0.0, min(1.0, anomaly_score))
+
+    # Entity richness component (0-5 entities maps to 0-1)
+    entity_component = min(1.0, entity_count / 5.0)
+
+    # Freshness component (0 hours = 1.0, 24+ hours = 0.2)
+    if signal_age_hours <= 0:
+        freshness_component = 1.0
+    elif signal_age_hours >= 24:
+        freshness_component = 0.2
+    else:
+        freshness_component = 1.0 - (0.8 * signal_age_hours / 24.0)
+
+    # Weighted combination
+    importance = (
+        0.40 * source_base +
+        0.15 * content_component +
+        0.20 * anomaly_component +
+        0.10 * entity_component +
+        0.15 * freshness_component
+    )
+
+    return round(max(0.1, min(1.0, importance)), 2)
 
 
 # Prefixes commonly added by feeds that should be stripped for dedup
@@ -275,6 +318,9 @@ def fetch_global_feeds(db: Session, max_per_feed: int = 5) -> list[Signal]:
                 if entities:
                     raw_data["entities"] = entities
 
+                _anomaly = _estimate_anomaly(title + " " + summary, source_name=source_name)
+                _entity_count = sum(len(v) if isinstance(v, list) else 0 for v in entities.values()) if entities else 0
+
                 signal = Signal(
                     source="rss",
                     signal_type="news_article",
@@ -284,8 +330,13 @@ def fetch_global_feeds(db: Session, max_per_feed: int = 5) -> list[Signal]:
                     summary=summary[:400],
                     raw_data_json=raw_data,
                     sentiment_score=_estimate_sentiment(title, summary),
-                    anomaly_score=_estimate_anomaly(title + " " + summary, source_name=source_name),
-                    importance=_importance_for_source(source_name, title),
+                    anomaly_score=_anomaly,
+                    importance=_importance_for_source(
+                        source_name, title,
+                        anomaly_score=_anomaly,
+                        entity_count=_entity_count,
+                        signal_age_hours=0.0,  # brand new signal
+                    ),
                     timestamp=datetime.now(timezone.utc),
                 )
                 db.add(signal)
@@ -471,6 +522,9 @@ def fetch_country_rss(db: Session, country_code: str) -> list[Signal]:
                     if _entities:
                         _raw_data["entities"] = _entities
 
+                    _anomaly_c = _estimate_anomaly(title + " " + _summary, source_name=_source_name)
+                    _entity_count_c = sum(len(v) if isinstance(v, list) else 0 for v in _entities.values()) if _entities else 0
+
                     signal = Signal(
                         source=SignalSource.SCRAPLING.value,
                         signal_type="news_article",
@@ -482,8 +536,13 @@ def fetch_country_rss(db: Session, country_code: str) -> list[Signal]:
                         summary=_summary,
                         raw_data_json=_raw_data,
                         sentiment_score=_estimate_sentiment(title, _summary),
-                        anomaly_score=_estimate_anomaly(title + " " + _summary, source_name=_source_name),
-                        importance=_importance_for_source(_source_name, title),
+                        anomaly_score=_anomaly_c,
+                        importance=_importance_for_source(
+                            _source_name, title,
+                            anomaly_score=_anomaly_c,
+                            entity_count=_entity_count_c,
+                            signal_age_hours=0.0,
+                        ),
                         timestamp=datetime.now(timezone.utc),
                     )
                     db.add(signal)

@@ -347,7 +347,7 @@ GLOBAL_FEEDS = [
     ("https://voxeu.org/rss", "economy", "VoxEU CEPR"),
 
     # === MISSING CRITICAL FEEDS (customer-requested) ===
-    ("https://www.opec.org/opec_web/en/press_room/28.htm", "economy", "OPEC News"),
+    ("https://news.google.com/rss/search?q=OPEC+oil+production&hl=en-US&gl=US&ceid=US:en", "economy", "OPEC News"),
     ("https://www.cftc.gov/Newsroom/rss_feed.html", "finance", "CFTC"),
     ("https://ofac.treasury.gov/recent-actions", "geopolitical", "OFAC Sanctions"),
     ("https://www.iea.org/rss", "economy", "IEA"),

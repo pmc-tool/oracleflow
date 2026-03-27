@@ -26,6 +26,10 @@ TICKER_ALIASES = {
     'AMAZON': 'AMZN', 'NVIDIA': 'NVDA', 'META': 'META', 'FACEBOOK': 'META',
     'TESLA': 'TSLA', 'NETFLIX': 'NFLX', 'BITCOIN': 'BTC', 'ETHEREUM': 'ETH',
     'OPEC': 'OPEC', 'NATO': 'NATO',  # These are orgs but people search them as tickers
+    'OPEC+': 'OPEC',  # OPEC+ variant
+    'OIL PRODUCTION CUT': 'OPEC',  # Contextual alias for OPEC
+    'OIL OUTPUT CUT': 'OPEC',  # Contextual alias for OPEC
+    'CRUDE OUTPUT': 'OPEC',  # Contextual alias for OPEC
     'JPMORGAN': 'JPM', 'GOLDMAN SACHS': 'GS', 'MORGAN STANLEY': 'MS',
     'BOEING': 'BA', 'LOCKHEED': 'LMT', 'RAYTHEON': 'RTX',
     'EXXON': 'XOM', 'CHEVRON': 'CVX', 'SHELL': 'SHEL',
@@ -101,7 +105,7 @@ COUNTRY_MAP = {
 # Organizations (major international bodies, agencies, and tech companies)
 # ---------------------------------------------------------------------------
 ORGANIZATIONS = [
-    'NATO', 'EU', 'UN', 'WHO', 'IMF', 'OPEC', 'FBI', 'CIA', 'NSA', 'CISA',
+    'NATO', 'EU', 'UN', 'WHO', 'IMF', 'OPEC', 'OPEC+', 'FBI', 'CIA', 'NSA', 'CISA',
     'SEC', 'Fed', 'ECB', 'BOJ', 'PBOC', 'Maersk', 'Evergreen', 'Tesla', 'Apple',
     'Microsoft', 'Google', 'Amazon', 'Meta', 'NVIDIA', 'OpenAI', 'Anthropic',
     'IAEA', 'BRICS', 'ASEAN', 'OECD', 'WTO', 'ICC', 'Interpol',
