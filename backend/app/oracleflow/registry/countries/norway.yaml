@@ -1,8 +1,8 @@
 country: Norway
-code: NO
+code: "NO"
 region: europe
 languages:
-  - no
+  - "no"
 timezone: Europe/Oslo
 proxy_pool: ""
 

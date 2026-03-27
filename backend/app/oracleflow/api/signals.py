@@ -8,7 +8,7 @@ import requests as http_requests
 from flask import g, jsonify, request
 
 logger = logging.getLogger(__name__)
-from sqlalchemy import cast, func, select, or_, String
+from sqlalchemy import cast, func, select, or_, String, text
 
 from . import signals_bp
 from app.oracleflow.auth.utils import decode_token
@@ -128,8 +128,12 @@ def list_signals():
         # Works on SQLite (cast JSON to text + ILIKE) and PostgreSQL alike.
         entity = request.args.get('entity', '').strip()
         if entity:
+            # Search only within the "entities" key of raw_data_json to avoid
+            # false positives (e.g. "ETH" matching "Netherlands" in other fields).
             entity_pattern = f"%{entity}%"
-            entity_filter = cast(Signal.raw_data_json, String).ilike(entity_pattern)
+            entity_filter = text(
+                "cast(raw_data_json->'entities' as text) ILIKE :ep"
+            ).bindparams(ep=entity_pattern)
             stmt = stmt.where(entity_filter)
             count_stmt = count_stmt.where(entity_filter)
 

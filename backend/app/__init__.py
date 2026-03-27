@@ -9,7 +9,7 @@ import warnings
 # Must be set before all other imports
 warnings.filterwarnings("ignore", message=".*resource_tracker.*")
 
-from flask import Flask, jsonify, request
+from flask import Blueprint, Flask, jsonify, redirect, request, url_for
 from flask_cors import CORS
 
 from .config import Config
@@ -93,6 +93,18 @@ def create_app(config_class=Config):
     app.register_blueprint(sites_bp, url_prefix='/api/sites')
     app.register_blueprint(signals_bp, url_prefix='/api/signals')
     app.register_blueprint(chaos_bp, url_prefix='/api/chaos')
+    # Also register under /api/chaos-index for clients using the longer URL
+    chaos_index_bp = Blueprint('of_chaos_index', __name__)
+
+    @chaos_index_bp.route('/', methods=['GET'])
+    def chaos_index_redirect_root():
+        return redirect(url_for('of_chaos.get_latest_chaos'), code=307)
+
+    @chaos_index_bp.route('/history', methods=['GET'])
+    def chaos_index_redirect_history():
+        return redirect(url_for('of_chaos.get_chaos_history', **request.args), code=307)
+
+    app.register_blueprint(chaos_index_bp, url_prefix='/api/chaos-index')
     app.register_blueprint(entities_bp, url_prefix='/api/entities')
     app.register_blueprint(countries_bp, url_prefix='/api/countries')
     app.register_blueprint(alerts_bp, url_prefix='/api/alerts')

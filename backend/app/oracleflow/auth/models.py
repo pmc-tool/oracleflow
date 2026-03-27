@@ -46,7 +46,7 @@ class Subscription(Base):
 
 # Plan limits
 PLAN_LIMITS = {
-    'free':       {'max_users': 1,   'max_sites': 1,   'max_simulations': 1,   'max_panels': 6,  'max_categories': 3, 'price': 0},
+    'free':       {'max_users': 1,   'max_sites': 3,   'max_simulations': 3,   'max_panels': 10, 'max_categories': 5, 'price': 0},
     'scout':      {'max_users': 1,   'max_sites': 2,   'max_simulations': 3,   'max_panels': 10, 'max_categories': 5, 'price': 49},
     'strategist': {'max_users': 3,   'max_sites': 5,   'max_simulations': 10,  'max_panels': 15, 'max_categories': 8, 'price': 199},
     'commander':  {'max_users': 10,  'max_sites': 25,  'max_simulations': 50,  'max_panels': 30, 'max_categories': 12, 'price': 999},

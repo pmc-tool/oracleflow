@@ -333,6 +333,91 @@ def fetch_country_rss(db: Session, country_code: str) -> list[Signal]:
     return signals
 
 
+def reprocess_country_codes(db: Session) -> int:
+    """Backfill country_code on existing signals that have empty/null country_code.
+
+    Scans title + summary text against keyword maps for 50 countries and updates
+    matching rows in-place. Returns the number of signals updated.
+    """
+    COUNTRY_KEYWORDS = {
+        'JP': ['japan', 'tokyo', 'japanese', 'kishida'],
+        'CN': ['china', 'beijing', 'chinese', 'xi jinping'],
+        'RU': ['russia', 'moscow', 'putin', 'kremlin', 'russian'],
+        'UA': ['ukraine', 'kyiv', 'zelensky', 'ukrainian'],
+        'IR': ['iran', 'tehran', 'iranian', 'khamenei'],
+        'IL': ['israel', 'tel aviv', 'jerusalem', 'netanyahu', 'israeli'],
+        'TW': ['taiwan', 'taipei', 'taiwanese'],
+        'IN': ['india', 'delhi', 'mumbai', 'modi', 'indian'],
+        'BD': ['bangladesh', 'dhaka', 'bangladeshi'],
+        'PK': ['pakistan', 'islamabad', 'karachi', 'pakistani'],
+        'US': ['united states', 'washington', 'congress', 'biden', 'trump', 'white house', 'pentagon', 'federal reserve'],
+        'GB': ['united kingdom', 'britain', 'london', 'parliament', 'downing', 'starmer', 'sunak'],
+        'DE': ['germany', 'berlin', 'bundestag', 'scholz', 'merz'],
+        'FR': ['france', 'paris', 'macron', 'elysee', 'french'],
+        'KR': ['south korea', 'seoul', 'korean', 'yoon suk'],
+        'AU': ['australia', 'canberra', 'sydney', 'australian', 'albanese'],
+        'CA': ['canada', 'ottawa', 'canadian', 'trudeau'],
+        'BR': ['brazil', 'brasilia', 'brazilian', 'lula', 'bolsonaro'],
+        'MX': ['mexico', 'mexican', 'mexico city', 'amlo', 'sheinbaum'],
+        'AR': ['argentina', 'buenos aires', 'milei', 'argentine'],
+        'CL': ['chile', 'santiago', 'chilean', 'boric'],
+        'CO': ['colombia', 'bogota', 'colombian', 'petro'],
+        'ZA': ['south africa', 'pretoria', 'cape town', 'ramaphosa', 'anc'],
+        'NG': ['nigeria', 'abuja', 'lagos', 'nigerian', 'tinubu'],
+        'KE': ['kenya', 'nairobi', 'kenyan', 'ruto'],
+        'EG': ['egypt', 'cairo', 'egyptian', 'al-sisi'],
+        'SA': ['saudi arabia', 'riyadh', 'saudi', 'mbs'],
+        'AE': ['united arab emirates', 'dubai', 'abu dhabi', 'emirati', 'uae'],
+        'IQ': ['iraq', 'baghdad', 'iraqi'],
+        'SY': ['syria', 'damascus', 'syrian', 'assad'],
+        'TR': ['turkey', 'turkiye', 'ankara', 'istanbul', 'erdogan', 'turkish'],
+        'PL': ['poland', 'warsaw', 'polish', 'tusk'],
+        'AF': ['afghanistan', 'kabul', 'afghan', 'taliban'],
+        'MM': ['myanmar', 'burma', 'yangon', 'naypyidaw', 'burmese'],
+        'TH': ['thailand', 'bangkok', 'thai'],
+        'VN': ['vietnam', 'hanoi', 'vietnamese'],
+        'ID': ['indonesia', 'jakarta', 'indonesian', 'jokowi', 'prabowo'],
+        'PH': ['philippines', 'manila', 'filipino', 'marcos'],
+        'MY': ['malaysia', 'kuala lumpur', 'malaysian', 'anwar ibrahim'],
+        'SG': ['singapore', 'singaporean'],
+        'NZ': ['new zealand', 'wellington', 'auckland'],
+        'SE': ['sweden', 'stockholm', 'swedish'],
+        'NO': ['norway', 'oslo', 'norwegian'],
+        'CH': ['switzerland', 'bern', 'zurich', 'swiss'],
+        'IT': ['italy', 'rome', 'italian', 'meloni'],
+        'ES': ['spain', 'madrid', 'spanish', 'sanchez'],
+        'NL': ['netherlands', 'amsterdam', 'dutch', 'hague'],
+        'JM': ['jamaica', 'kingston', 'holness', 'pnp', 'jlp'],
+        'TT': ['trinidad', 'tobago', 'port of spain', 'rowley'],
+        'BB': ['barbados', 'bridgetown', 'mottley'],
+    }
+
+    # Fetch all signals with empty country_code
+    stmt = (
+        select(Signal)
+        .where(
+            (Signal.country_code.is_(None)) | (Signal.country_code == '')
+        )
+    )
+    result = db.execute(stmt)
+    signals = list(result.scalars().all())
+
+    updated = 0
+    for signal in signals:
+        text = ((signal.title or '') + ' ' + (signal.summary or '')).lower()
+        for code, keywords in COUNTRY_KEYWORDS.items():
+            if any(kw in text for kw in keywords):
+                signal.country_code = code
+                updated += 1
+                break
+
+    if updated:
+        db.flush()
+
+    logger.info("Reprocessed country_codes: %d of %d signals updated", updated, len(signals))
+    return updated
+
+
 def _guess_category(text: str) -> str:
     """Simple keyword-based category detection."""
     text_lower = text.lower()

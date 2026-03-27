@@ -47,7 +47,7 @@ def _get_db():
 
 @countries_bp.route('/', methods=['GET'])
 def list_countries():
-    """List all countries from the registry."""
+    """List all countries from the registry, with DB fallback."""
     try:
         configs = _registry.list_countries()
         data = []
@@ -60,6 +60,30 @@ def list_countries():
                 "timezone": c.timezone,
             })
 
+        # If registry is empty/missing, fall back to distinct country_codes from signals
+        if not data:
+            db = _get_db()
+            try:
+                stmt = (
+                    select(Signal.country_code, sa_func.count(Signal.id).label('signal_count'))
+                    .where(Signal.country_code.isnot(None), Signal.country_code != '')
+                    .group_by(Signal.country_code)
+                    .order_by(Signal.country_code)
+                )
+                rows = db.execute(stmt).all()
+                for row in rows:
+                    data.append({
+                        "code": row.country_code,
+                        "country": row.country_code,  # no display name available
+                        "region": None,
+                        "languages": [],
+                        "timezone": None,
+                        "signal_count": row.signal_count,
+                        "source": "signals_fallback",
+                    })
+            finally:
+                db.close()
+
         return jsonify({"success": True, "data": data, "total": len(data)})
     except Exception as e:
         logger.exception("Countries API error: %s", e)
@@ -68,14 +92,51 @@ def list_countries():
 
 @countries_bp.route('/<code>', methods=['GET'])
 def get_country(code):
-    """Get full country config from registry."""
+    """Get full country config from registry, with DB fallback."""
     try:
         config = _registry.get_country(code)
-        if not config:
-            return jsonify({"success": False, "error": f"Country {code} not found"}), 404
+        if config:
+            data = config.model_dump()
+            return jsonify({"success": True, "data": data})
 
-        data = config.model_dump()
-        return jsonify({"success": True, "data": data})
+        # Fallback: build basic country data from signals table
+        db = _get_db()
+        try:
+            country_code = code.upper()
+            stmt = (
+                select(
+                    sa_func.count(Signal.id).label('signal_count'),
+                    sa_func.avg(Signal.anomaly_score).label('avg_risk'),
+                )
+                .where(Signal.country_code == country_code)
+            )
+            row = db.execute(stmt).one()
+
+            if row.signal_count == 0:
+                return jsonify({"success": False, "error": f"Country {code} not found"}), 404
+
+            # Get top categories
+            cat_stmt = (
+                select(Signal.category, sa_func.count(Signal.id).label('cnt'))
+                .where(Signal.country_code == country_code)
+                .group_by(Signal.category)
+                .order_by(sa_func.count(Signal.id).desc())
+                .limit(5)
+            )
+            cat_rows = db.execute(cat_stmt).all()
+            top_categories = [{"category": r.category, "count": r.cnt} for r in cat_rows]
+
+            data = {
+                "code": country_code,
+                "country": country_code,
+                "signal_count": row.signal_count,
+                "overall_risk": round(float(row.avg_risk), 4) if row.avg_risk else 0.0,
+                "top_categories": top_categories,
+                "source": "signals_fallback",
+            }
+            return jsonify({"success": True, "data": data})
+        finally:
+            db.close()
     except Exception as e:
         logger.exception("Countries API error: %s", e)
         return jsonify({"success": False, "error": "An internal error occurred"}), 500
@@ -86,11 +147,7 @@ def get_country_risk(code):
     """Compute country risk from signals -- average anomaly scores by category."""
     db = _get_db()
     try:
-        config = _registry.get_country(code)
-        if not config:
-            return jsonify({"success": False, "error": f"Country {code} not found"}), 404
-
-        country_code = config.code
+        country_code = code.upper()
         stmt = (
             select(Signal)
             .where(Signal.country_code == country_code)
@@ -145,14 +202,11 @@ def get_country_trend(code):
     """Return daily risk score trend for a country over the last N days."""
     db = _get_db()
     try:
-        config = _registry.get_country(code)
-        if not config:
-            return jsonify({"success": False, "error": f"Country {code} not found"}), 404
+        country_code = code.upper()
 
         days = request.args.get('days', 30, type=int)
         days = min(days, 365)
         cutoff = datetime.now(timezone.utc) - timedelta(days=days)
-        country_code = config.code
 
         # Query signals grouped by date
         date_expr = sa_func.date(Signal.timestamp)

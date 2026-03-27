@@ -21,6 +21,8 @@ class RegistryLoader:
         and return a mapping of country code to CountryConfig.
 
         Results are cached in memory after the first successful load.
+        If the registry directory or YAML files are missing, returns an
+        empty dict instead of crashing.
         """
         if self._cache is not None:
             return self._cache
@@ -29,11 +31,21 @@ class RegistryLoader:
         registry_path = Path(self._registry_dir)
 
         if not registry_path.is_dir():
-            raise ValueError(f"Registry directory not found: {registry_path}")
+            import logging
+            logging.getLogger(__name__).warning(
+                "Registry directory not found: %s — returning empty registry", registry_path
+            )
+            self._cache = configs
+            return self._cache
 
         yaml_files = sorted(registry_path.glob("*.yaml"))
         if not yaml_files:
-            raise ValueError(f"No YAML files found in {registry_path}")
+            import logging
+            logging.getLogger(__name__).warning(
+                "No YAML files found in %s — returning empty registry", registry_path
+            )
+            self._cache = configs
+            return self._cache
 
         for yaml_file in yaml_files:
             # Skip template files

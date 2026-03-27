@@ -205,13 +205,13 @@ GLOBAL_FEEDS = [
     ("https://insightcrime.org/feed/", "crime", "InSight Crime"),
 
     # === SCIENCE & CLIMATE (~10) ===
-    ("https://www.nature.com/nature.rss", "climate", "Nature"),
-    ("https://www.sciencedaily.com/rss/all.xml", "climate", "ScienceDaily"),
-    ("https://phys.org/rss-feed/", "climate", "Phys.org"),
+    ("https://www.nature.com/nature.rss", "technology", "Nature"),
+    ("https://www.sciencedaily.com/rss/all.xml", "technology", "ScienceDaily"),
+    ("https://phys.org/rss-feed/", "technology", "Phys.org"),
     ("https://www.climatechangenews.com/feed/", "climate", "Climate Home News"),
     ("https://insideclimatenews.org/feed/", "climate", "Inside Climate News"),
-    ("https://www.livescience.com/feeds/all", "climate", "Live Science"),
-    ("https://www.newscientist.com/feed/home/", "climate", "New Scientist"),
+    ("https://www.livescience.com/feeds/all", "technology", "Live Science"),
+    ("https://www.newscientist.com/feed/home/", "technology", "New Scientist"),
     ("https://news.mongabay.com/feed/", "climate", "Mongabay"),
     ("https://news.mit.edu/rss/feed", "technology", "MIT News"),
     ("https://singularityhub.com/feed/", "technology", "Singularity Hub"),
@@ -291,9 +291,9 @@ GLOBAL_FEEDS = [
     ("https://www.mining-technology.com/feed/", "economy", "Mining Technology"),
 
     # === AVIATION ===
-    ("https://simpleflying.com/feed/", "aviation", "Simple Flying"),
-    ("https://airlinegeeks.com/feed/", "aviation", "Airline Geeks"),
-    ("https://www.aviationpros.com/rss", "aviation", "AviationPros"),
+    ("https://simpleflying.com/feed/", "technology", "Simple Flying"),
+    ("https://airlinegeeks.com/feed/", "technology", "Airline Geeks"),
+    ("https://www.aviationpros.com/rss", "technology", "AviationPros"),
 
     # === UN & INTERNATIONAL ORGANIZATIONS ===
     ("https://news.un.org/feed/subscribe/en/news/all/rss.xml", "geopolitical", "UN News"),
@@ -319,7 +319,18 @@ GLOBAL_FEEDS = [
     ("https://www.eu-startups.com/feed/", "economy", "EU-Startups"),
     ("https://sifted.eu/feed/", "economy", "Sifted"),
     ("https://inc42.com/feed/", "economy", "Inc42 India"),
+
+    # === MISSING CRITICAL FEEDS (customer-requested) ===
+    ("https://www.opec.org/opec_web/en/press_room/28.htm", "economy", "OPEC News"),
+    ("https://www.cftc.gov/Newsroom/rss_feed.html", "finance", "CFTC"),
+    ("https://ofac.treasury.gov/recent-actions", "geopolitical", "OFAC Sanctions"),
+    ("https://www.iea.org/rss", "economy", "IEA"),
+    ("https://www.eia.gov/rss/", "economy", "EIA Main"),
+    ("https://alerts.weather.gov/cap/us.php?x=0", "climate", "NOAA Weather Alerts"),
+    ("https://www.nhc.noaa.gov/index-at.xml", "climate", "NHC Atlantic Hurricane"),
+    ("https://www.nhc.noaa.gov/index-ep.xml", "climate", "NHC East Pacific Hurricane"),
+    ("https://googleprojectzero.blogspot.com/feeds/posts/default", "cyber", "Google Project Zero"),
 ]
 
-# Total: 227 feeds across 12+ categories (includes humanitarian & supply chain packs)
+# Total: 236 feeds across 12+ categories (includes humanitarian, supply chain, regulatory & weather packs)
 # Expandable — add more by appending to list
