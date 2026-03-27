@@ -8,7 +8,7 @@ import requests as http_requests
 from flask import g, jsonify, request
 
 logger = logging.getLogger(__name__)
-from sqlalchemy import cast, func, select, or_, String, text
+from sqlalchemy import and_, cast, func, select, or_, String, text
 
 from . import signals_bp
 from app.oracleflow.auth.utils import decode_token
@@ -97,7 +97,15 @@ def list_signals():
         # For short terms (< 5 chars), use word-boundary matching to avoid
         # substring false positives (e.g. "APT" matching "capture").
         if search:
-            if len(search) < 5:
+            words = search.strip().split()
+            if len(words) > 1:
+                # Multi-word: require ALL words to appear in title OR summary
+                conditions = []
+                for word in words:
+                    word_pattern = f"%{word}%"
+                    conditions.append(or_(Signal.title.ilike(word_pattern), Signal.summary.ilike(word_pattern)))
+                search_filter = and_(*conditions)
+            elif len(search) < 5:
                 search_term = search
                 # Match at word boundaries — start of text, after space/punctuation,
                 # before space/punctuation/end

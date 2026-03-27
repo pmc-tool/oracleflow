@@ -40,6 +40,23 @@ logger = logging.getLogger(__name__)
 # Module-level loader instance (caches configs after first load)
 _registry = RegistryLoader()
 
+# Display names for country codes used in signal-based fallback
+COUNTRY_NAMES = {
+    'US': 'United States', 'GB': 'United Kingdom', 'CN': 'China', 'RU': 'Russia',
+    'JP': 'Japan', 'DE': 'Germany', 'FR': 'France', 'IN': 'India', 'BR': 'Brazil',
+    'AU': 'Australia', 'CA': 'Canada', 'KR': 'South Korea', 'IR': 'Iran',
+    'IL': 'Israel', 'UA': 'Ukraine', 'TW': 'Taiwan', 'SA': 'Saudi Arabia',
+    'TR': 'Turkey', 'EG': 'Egypt', 'NG': 'Nigeria', 'ZA': 'South Africa',
+    'BD': 'Bangladesh', 'PK': 'Pakistan', 'MX': 'Mexico', 'AR': 'Argentina',
+    'ID': 'Indonesia', 'TH': 'Thailand', 'VN': 'Vietnam', 'PH': 'Philippines',
+    'MY': 'Malaysia', 'SG': 'Singapore', 'NZ': 'New Zealand', 'SE': 'Sweden',
+    'NO': 'Norway', 'DK': 'Denmark', 'FI': 'Finland', 'PL': 'Poland',
+    'IT': 'Italy', 'ES': 'Spain', 'PT': 'Portugal', 'NL': 'Netherlands',
+    'BE': 'Belgium', 'CH': 'Switzerland', 'AT': 'Austria', 'IE': 'Ireland',
+    'CZ': 'Czech Republic', 'RO': 'Romania', 'GR': 'Greece', 'HU': 'Hungary',
+    'CL': 'Chile', 'CO': 'Colombia', 'PE': 'Peru', 'VE': 'Venezuela',
+}
+
 
 def _get_db():
     return get_session()
@@ -54,6 +71,7 @@ def list_countries():
         for c in configs:
             data.append({
                 "code": c.code,
+                "name": c.country,
                 "country": c.country,
                 "region": c.region,
                 "languages": c.languages,
@@ -72,9 +90,11 @@ def list_countries():
                 )
                 rows = db.execute(stmt).all()
                 for row in rows:
+                    display_name = COUNTRY_NAMES.get(row.country_code, row.country_code)
                     data.append({
                         "code": row.country_code,
-                        "country": row.country_code,  # no display name available
+                        "name": display_name,
+                        "country": display_name,
                         "region": None,
                         "languages": [],
                         "timezone": None,
@@ -126,9 +146,11 @@ def get_country(code):
             cat_rows = db.execute(cat_stmt).all()
             top_categories = [{"category": r.category, "count": r.cnt} for r in cat_rows]
 
+            display_name = COUNTRY_NAMES.get(country_code, country_code)
             data = {
                 "code": country_code,
-                "country": country_code,
+                "name": display_name,
+                "country": display_name,
                 "signal_count": row.signal_count,
                 "overall_risk": round(float(row.avg_risk), 4) if row.avg_risk else 0.0,
                 "top_categories": top_categories,
