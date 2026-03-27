@@ -104,9 +104,21 @@ def _compute_chaos(app):
     with app.app_context():
         db = get_session()
         try:
-            ChaosIndexCalculator.compute(db)
+            snapshot = ChaosIndexCalculator.compute(db)
             db.commit()
             logger.debug("Chaos index computation completed")
+
+            # Broadcast new chaos score via real-time layer
+            try:
+                from app.oracleflow.realtime import broadcast_chaos_update
+                broadcast_chaos_update({
+                    'global_score': snapshot.global_score,
+                    'categories': snapshot.categories,
+                    'timestamp': snapshot.timestamp.isoformat() if snapshot.timestamp else None,
+                })
+            except Exception as rt_err:
+                logger.debug("Chaos real-time broadcast failed: %s", rt_err)
+
         except Exception as e:
             db.rollback()
             logger.error("Chaos index computation failed: %s", e)
@@ -115,7 +127,7 @@ def _compute_chaos(app):
 
 
 def _fetch_feeds(app):
-    """Fetch signals from all global RSS feeds + USGS."""
+    """Fetch signals from all global RSS feeds + USGS + NVD + GDACS."""
     with app.app_context():
         db = get_session()
         try:
@@ -123,17 +135,22 @@ def _fetch_feeds(app):
             from app.oracleflow.feeds.usgs import fetch_earthquakes
             from app.oracleflow.feeds.acled import fetch_conflicts
             from app.oracleflow.feeds.nasa import fetch_wildfires
+            from app.oracleflow.feeds.nvd import fetch_cves
+            from app.oracleflow.feeds.gdacs import fetch_gdacs_alerts
 
             rss_signals = fetch_global_feeds(db)
             quake_signals = fetch_earthquakes(db)
             conflict_signals = fetch_conflicts(db)
             fire_signals = fetch_wildfires(db)
+            cve_count = fetch_cves(db)
+            gdacs_count = fetch_gdacs_alerts(db)
             db.commit()
-            total = len(rss_signals) + len(quake_signals) + len(conflict_signals) + len(fire_signals)
+            total = len(rss_signals) + len(quake_signals) + len(conflict_signals) + len(fire_signals) + cve_count + gdacs_count
             if total > 0:
                 logger.info(
                     f"Feed ingest: {len(rss_signals)} RSS + {len(quake_signals)} earthquakes"
                     f" + {len(conflict_signals)} conflicts + {len(fire_signals)} fires"
+                    f" + {cve_count} CVEs + {gdacs_count} GDACS alerts"
                     f" = {total} new signals"
                 )
         except Exception as e:
@@ -182,6 +199,22 @@ def _run_pipeline(app):
                     len(clusters),
                     len(anomaly_results),
                 )
+
+                # --- Broadcast top 5 highest-anomaly signals via real-time layer ---
+                try:
+                    from app.oracleflow.realtime import broadcast_signal
+                    top_signals = sorted(signals, key=lambda s: s.anomaly_score or 0, reverse=True)[:5]
+                    for sig in top_signals:
+                        broadcast_signal({
+                            'id': sig.id,
+                            'title': sig.title,
+                            'category': sig.category,
+                            'anomaly_score': sig.anomaly_score,
+                            'sentiment_score': sig.sentiment_score,
+                            'timestamp': sig.timestamp.isoformat() if sig.timestamp else None,
+                        }, org_id=sig.organization_id)
+                except Exception as rt_err:
+                    logger.debug("Real-time broadcast failed: %s", rt_err)
 
                 # --- Alert evaluation ---
                 _evaluate_alerts(db, signals)

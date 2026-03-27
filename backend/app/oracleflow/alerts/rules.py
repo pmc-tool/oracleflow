@@ -27,6 +27,7 @@ class AlertRule(BaseModel):
     country_codes: list[str] = Field(default_factory=list)
     categories: list[str] = Field(default_factory=list)
     page_types: list[str] = Field(default_factory=list)
+    keywords: list[str] = Field(default_factory=list)
     severity: AlertSeverity = AlertSeverity.MEDIUM
     channels: list[AlertChannel] = Field(default_factory=list)
     webhook_url: str = ""
@@ -65,6 +66,15 @@ class RuleEvaluator:
             # Optional category filter
             if rule.categories and getattr(signal, "category", None):
                 if signal.category not in rule.categories:
+                    continue
+
+            # Optional keyword filter
+            if rule.keywords:
+                signal_text = (
+                    (getattr(signal, 'title', '') or '') + ' ' +
+                    (getattr(signal, 'summary', '') or '')
+                ).lower()
+                if not any(kw.lower() in signal_text for kw in rule.keywords):
                     continue
 
             if rule.condition_type == "anomaly_threshold":

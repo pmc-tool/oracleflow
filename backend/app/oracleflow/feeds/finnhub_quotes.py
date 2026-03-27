@@ -3,7 +3,7 @@ logger = logging.getLogger(__name__)
 
 FINNHUB_KEY = os.environ.get('FINNHUB_API_KEY', '')
 
-def fetch_stock_quotes(symbols=['AAPL','TSLA','MSFT','AMZN','GOOGL','NVDA','META','BRK.B']):
+def fetch_stock_quotes(symbols=['AAPL','TSLA','MSFT','AMZN','GOOGL','NVDA','META','BRK.B','SPY','QQQ']):
     if not FINNHUB_KEY: return []
     quotes = []
     for sym in symbols:
@@ -28,6 +28,43 @@ def fetch_crypto_quotes():
     except Exception:
         pass
     return []
+
+def fetch_forex_quotes(pairs=None):
+    """Fetch forex rates from Finnhub (requires API key).
+
+    Uses Finnhub's /forex/rates endpoint for major currency pairs.
+    Falls back to labeled static pairs if the API is unavailable.
+    """
+    if pairs is None:
+        pairs = ['OANDA:EUR_USD', 'OANDA:GBP_USD', 'OANDA:USD_JPY',
+                 'OANDA:USD_CHF', 'OANDA:AUD_USD', 'OANDA:USD_CAD']
+
+    if not FINNHUB_KEY:
+        return []
+
+    quotes = []
+    for pair in pairs:
+        try:
+            resp = requests.get(
+                f'https://finnhub.io/api/v1/quote?symbol={pair}&token={FINNHUB_KEY}',
+                timeout=5,
+            )
+            if resp.status_code == 200:
+                d = resp.json()
+                if d.get('c', 0) > 0:
+                    # Derive a readable label: OANDA:EUR_USD -> EUR/USD
+                    label = pair.split(':')[-1].replace('_', '/')
+                    quotes.append({
+                        'symbol': label,
+                        'price': d['c'],
+                        'change': d.get('dp', 0),
+                        'high': d.get('h', 0),
+                        'low': d.get('l', 0),
+                    })
+        except Exception:
+            pass
+
+    return quotes
 
 def fetch_commodity_quotes():
     """Fetch commodity prices. Use Yahoo Finance or static with Finnhub."""

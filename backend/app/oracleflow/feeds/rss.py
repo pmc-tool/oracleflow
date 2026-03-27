@@ -132,47 +132,59 @@ def _title_key(title: str) -> str:
     return ' '.join(words[:10])
 
 
-def _estimate_sentiment(title: str, summary: str = '') -> float:
-    """Keyword-based sentiment scorer. Returns a value in [-1.0, 1.0].
+try:
+    from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
+    _vader = SentimentIntensityAnalyzer()
 
-    Uses stem-prefix matching: each keyword matches any word in the text
-    that starts with it (e.g. "threaten" matches "threatens", "threatening").
-    """
-    text = (title + ' ' + (summary or '')).lower()
-    words = text.split()
+    def _estimate_sentiment(title: str, summary: str = '') -> float:
+        """VADER-based sentiment scorer. Returns compound score in [-1.0, 1.0]."""
+        text = (title + '. ' + (summary or '')).strip()
+        if not text:
+            return 0.0
+        scores = _vader.polarity_scores(text)
+        return round(scores['compound'], 2)
+except ImportError:
+    def _estimate_sentiment(title: str, summary: str = '') -> float:
+        """Keyword-based sentiment scorer (fallback). Returns a value in [-1.0, 1.0].
 
-    positive_keywords = [
-        'peace', 'agreement', 'growth', 'recovery', 'breakthrough', 'ceasefire',
-        'cooperation', 'aid', 'rescue', 'progress', 'reform', 'victory', 'success',
-        'surge', 'rally', 'boost', 'gain', 'improve', 'resolve', 'support',
-        'deal', 'agree', 'launch', 'announce', 'expand', 'partner', 'approve',
-        'win', 'celebrat', 'open', 'welcome', 'achiev', 'complet', 'develop',
-        'innovat', 'invest', 'promot', 'protect', 'strengthen', 'stabiliz', 'recover',
-    ]
-    negative_keywords = [
-        'kill', 'attack', 'crash', 'crisis', 'war', 'bomb', 'death', 'collapse',
-        'threat', 'sanction', 'strike', 'invasion', 'earthquake', 'flood', 'fire',
-        'ransomware', 'breach', 'hack', 'explosion', 'conflict', 'refugee', 'famine',
-        'recession', 'default', 'plunge', 'shutdown', 'disaster', 'emergency',
-        'warn', 'threaten', 'fear', 'cut', 'fall', 'decline', 'drop', 'fail',
-        'lose', 'suspend', 'block', 'reject', 'oppose', 'delay', 'cancel',
-        'violat', 'arrest', 'charge', 'condemn', 'tension', 'dispute',
-        'controversy', 'scandal', 'fraud', 'corruption', 'unemploy',
-    ]
+        Uses stem-prefix matching: each keyword matches any word in the text
+        that starts with it (e.g. "threaten" matches "threatens", "threatening").
+        """
+        text = (title + ' ' + (summary or '')).lower()
+        words = text.split()
 
-    def _stem_match(keywords):
-        count = 0
-        for kw in keywords:
-            if any(w.startswith(kw) for w in words):
-                count += 1
-        return count
+        positive_keywords = [
+            'peace', 'agreement', 'growth', 'recovery', 'breakthrough', 'ceasefire',
+            'cooperation', 'aid', 'rescue', 'progress', 'reform', 'victory', 'success',
+            'surge', 'rally', 'boost', 'gain', 'improve', 'resolve', 'support',
+            'deal', 'agree', 'launch', 'announce', 'expand', 'partner', 'approve',
+            'win', 'celebrat', 'open', 'welcome', 'achiev', 'complet', 'develop',
+            'innovat', 'invest', 'promot', 'protect', 'strengthen', 'stabiliz', 'recover',
+        ]
+        negative_keywords = [
+            'kill', 'attack', 'crash', 'crisis', 'war', 'bomb', 'death', 'collapse',
+            'threat', 'sanction', 'strike', 'invasion', 'earthquake', 'flood', 'fire',
+            'ransomware', 'breach', 'hack', 'explosion', 'conflict', 'refugee', 'famine',
+            'recession', 'default', 'plunge', 'shutdown', 'disaster', 'emergency',
+            'warn', 'threaten', 'fear', 'cut', 'fall', 'decline', 'drop', 'fail',
+            'lose', 'suspend', 'block', 'reject', 'oppose', 'delay', 'cancel',
+            'violat', 'arrest', 'charge', 'condemn', 'tension', 'dispute',
+            'controversy', 'scandal', 'fraud', 'corruption', 'unemploy',
+        ]
 
-    pos = _stem_match(positive_keywords)
-    neg = _stem_match(negative_keywords)
+        def _stem_match(keywords):
+            count = 0
+            for kw in keywords:
+                if any(w.startswith(kw) for w in words):
+                    count += 1
+            return count
 
-    if pos + neg == 0:
-        return 0.0
-    return round((pos - neg) / (pos + neg), 2)  # Range: -1.0 to 1.0
+        pos = _stem_match(positive_keywords)
+        neg = _stem_match(negative_keywords)
+
+        if pos + neg == 0:
+            return 0.0
+        return round((pos - neg) / (pos + neg), 2)  # Range: -1.0 to 1.0
 
 
 def _is_duplicate(db: Session, title: str) -> bool:

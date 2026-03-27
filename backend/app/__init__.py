@@ -118,6 +118,10 @@ def create_app(config_class=Config):
     from .oracleflow.billing import billing_bp
     app.register_blueprint(billing_bp, url_prefix='/api/billing')
 
+    # Initialize OracleFlow real-time layer (WebSocket + SSE)
+    from .oracleflow.realtime import init_realtime
+    init_realtime(app)
+
     # Start OracleFlow background scheduler
     from .oracleflow.scheduler import start_scheduler
     start_scheduler(app)

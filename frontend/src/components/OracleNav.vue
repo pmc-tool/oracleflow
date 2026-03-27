@@ -86,6 +86,7 @@ const router = useRouter()
 const showNotifications = ref(false)
 const unreadCount = ref(0)
 let pollTimer = null
+let evtSource = null
 
 async function fetchUnreadCount() {
   try {
@@ -97,13 +98,55 @@ async function fetchUnreadCount() {
   }
 }
 
+function initSSE() {
+  // Use Server-Sent Events for real-time updates (no npm dependency needed)
+  try {
+    evtSource = new EventSource('/api/events/stream')
+    evtSource.onmessage = (event) => {
+      try {
+        const payload = JSON.parse(event.data)
+        if (payload.type === 'notification') {
+          // Increment unread count immediately on new notification
+          unreadCount.value += 1
+        } else if (payload.type === 'signal') {
+          // New high-anomaly signal arrived — could show a toast or badge
+          // For now, just bump the unread count as a notification is likely incoming
+        }
+      } catch (e) {
+        // Ignore malformed SSE data
+      }
+    }
+    evtSource.onerror = () => {
+      // SSE connection lost — fall back to polling
+      if (evtSource) {
+        evtSource.close()
+        evtSource = null
+      }
+      // Start polling as fallback
+      if (!pollTimer) {
+        pollTimer = setInterval(fetchUnreadCount, 60000)
+      }
+    }
+  } catch (e) {
+    // EventSource not supported or failed — use polling fallback
+    pollTimer = setInterval(fetchUnreadCount, 60000)
+  }
+}
+
 onMounted(() => {
   fetchUnreadCount()
-  pollTimer = setInterval(fetchUnreadCount, 60000)
+  initSSE()
+  // If SSE didn't start, polling is already set up by the error handler.
+  // But also set a slow fallback poll (every 5 min) for count accuracy.
+  pollTimer = setInterval(fetchUnreadCount, 300000)
 })
 
 onBeforeUnmount(() => {
   if (pollTimer) clearInterval(pollTimer)
+  if (evtSource) {
+    evtSource.close()
+    evtSource = null
+  }
 })
 
 function handleSignOut() {

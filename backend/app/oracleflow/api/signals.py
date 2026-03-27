@@ -5,7 +5,7 @@ from datetime import datetime, timedelta, timezone
 from functools import wraps
 
 import requests as http_requests
-from flask import g, jsonify, request
+from flask import Response, g, jsonify, request
 
 logger = logging.getLogger(__name__)
 from sqlalchemy import and_, cast, func, select, or_, String, text
@@ -206,10 +206,133 @@ def list_signals():
                 "timestamp": s.timestamp.isoformat() if s.timestamp else None,
             })
 
+        # Signal clustering: group similar titles and return representatives
+        if request.args.get('cluster') == 'true':
+            clusters = []
+            used = set()
+            for i, sig in enumerate(data):
+                if sig['id'] in used:
+                    continue
+                cluster = [sig]
+                sig_words = set(sig['title'].lower().split()[:8])
+                for j in range(i + 1, len(data)):
+                    if data[j]['id'] in used:
+                        continue
+                    other_words = set(data[j]['title'].lower().split()[:8])
+                    overlap = len(sig_words & other_words) / max(len(sig_words | other_words), 1)
+                    if overlap > 0.6:
+                        cluster.append(data[j])
+                        used.add(data[j]['id'])
+                # Keep the highest anomaly signal as representative
+                rep = max(cluster, key=lambda x: x.get('anomaly_score', 0))
+                rep['cluster_count'] = len(cluster)
+                if len(cluster) > 1:
+                    rep['also_reported_by'] = list(set(
+                        s.get('source', '') for s in cluster if s['id'] != rep['id']
+                    ))[:5]
+                clusters.append(rep)
+                used.add(rep['id'])
+            data = clusters
+
         return jsonify({"success": True, "data": data, "total": total})
     except Exception as e:
         db.rollback()
         logger.exception("Signals API error: %s", e)
+        return jsonify({"success": False, "error": "An internal error occurred"}), 500
+    finally:
+        db.close()
+
+
+@signals_bp.route('/export', methods=['GET'])
+@optional_auth
+def export_signals():
+    """Export signals as CSV."""
+    import csv
+    import io
+
+    db = _get_db()
+    try:
+        source = request.args.get('source')
+        country_code = request.args.get('country_code')
+        category = request.args.get('category')
+        categories = request.args.get('categories')
+        search = request.args.get('search', '').strip()
+        min_anomaly_score = request.args.get('min_anomaly_score', type=float)
+        since = request.args.get('since')
+        limit = request.args.get('limit', 500, type=int)
+        limit = min(limit, 2000)
+
+        # Org-scoping
+        if g.org_id is not None:
+            visibility = or_(
+                Signal.organization_id.is_(None),
+                Signal.organization_id == g.org_id,
+            )
+        else:
+            visibility = Signal.organization_id.is_(None)
+
+        stmt = select(Signal).where(visibility)
+
+        if source:
+            stmt = stmt.where(Signal.source == source)
+        if country_code:
+            stmt = stmt.where(Signal.country_code == country_code)
+        if categories:
+            cat_list = [c.strip() for c in categories.split(',') if c.strip()]
+            stmt = stmt.where(Signal.category.in_(cat_list))
+        elif category:
+            stmt = stmt.where(Signal.category == category)
+        if search:
+            keyword = f"%{search}%"
+            stmt = stmt.where(or_(
+                Signal.title.ilike(keyword),
+                Signal.summary.ilike(keyword),
+            ))
+        if min_anomaly_score is not None:
+            stmt = stmt.where(Signal.anomaly_score >= min_anomaly_score)
+        if since:
+            since_dt = None
+            now = datetime.now(timezone.utc)
+            if since == '24h':
+                since_dt = now - timedelta(hours=24)
+            elif since == '7d':
+                since_dt = now - timedelta(days=7)
+            elif since == '30d':
+                since_dt = now - timedelta(days=30)
+            else:
+                try:
+                    since_dt = datetime.fromisoformat(since)
+                except (ValueError, TypeError):
+                    pass
+            if since_dt:
+                stmt = stmt.where(Signal.timestamp >= since_dt)
+
+        stmt = stmt.order_by(Signal.timestamp.desc().nullslast()).limit(limit)
+        result = db.execute(stmt)
+        signals = list(result.scalars().all())
+
+        output = io.StringIO()
+        writer = csv.writer(output)
+        writer.writerow(['ID', 'Title', 'Source', 'Category', 'Country', 'Anomaly', 'Sentiment', 'Importance', 'Timestamp', 'URL'])
+        for s in signals:
+            raw = s.raw_data_json or {}
+            url = raw.get('link', raw.get('url', raw.get('source_url', '')))
+            writer.writerow([
+                s.id, s.title, s.source, s.category, s.country_code,
+                s.anomaly_score, s.sentiment_score, s.importance,
+                s.timestamp.isoformat() if s.timestamp else '',
+                url,
+            ])
+
+        output.seek(0)
+        return Response(
+            output.getvalue(),
+            mimetype='text/csv',
+            headers={'Content-Disposition': 'attachment; filename=oracleflow_signals.csv'},
+        )
+    except Exception as e:
+        db.rollback()
+        logger.exception("Signals export error: %s", e)
         return jsonify({"success": False, "error": "An internal error occurred"}), 500
     finally:
         db.close()

@@ -22,6 +22,7 @@
         <option value="importance">Most Important</option>
       </select>
       <button class="btn-clear" @click="clearFilters">Clear</button>
+      <button class="btn-export" @click="exportCSV">Export CSV</button>
     </div>
 
     <div v-if="loading" class="loading-text">Loading signals...</div>
@@ -366,6 +367,15 @@ const isSiteMonitorAlert = (sig) => {
   return sig.source === 'site_monitor' && (sig.anomaly_score || 0) > 0.6
 }
 
+const exportCSV = () => {
+  const params = new URLSearchParams()
+  params.set('limit', '500')
+  if (filters.source) params.set('source', filters.source)
+  if (filters.category) params.set('categories', filters.category)
+  if (filters.country) params.set('country_code', filters.country)
+  window.open('/api/signals/export?' + params.toString(), '_blank')
+}
+
 const clearFilters = () => {
   filters.source = ''
   filters.category = ''
@@ -463,6 +473,25 @@ onMounted(loadSignals)
 .btn-clear:hover {
   border-color: #FF4500;
   color: #FF4500;
+}
+
+.btn-export {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8rem;
+  padding: 6px 14px;
+  background: transparent;
+  border: 1px solid #4CAF50;
+  color: #4CAF50;
+  cursor: pointer;
+  transition: all 0.15s;
+  border-radius: 2px;
+  margin-left: auto;
+}
+
+.btn-export:hover {
+  background: rgba(76, 175, 80, 0.12);
+  color: #66BB6A;
+  border-color: #66BB6A;
 }
 
 /* ── Status states ── */

@@ -149,6 +149,7 @@ class AlertRuleDB(Base):
     categories_json: Mapped[list | None] = mapped_column(JSON, nullable=True)
     country_codes_json: Mapped[list | None] = mapped_column(JSON, nullable=True)
     page_types_json: Mapped[list | None] = mapped_column(JSON, nullable=True)
+    keywords_json: Mapped[list | None] = mapped_column(JSON, nullable=True)
     severity: Mapped[str] = mapped_column(
         String(50), nullable=False, default=AlertSeverity.MEDIUM.value
     )
@@ -172,6 +173,7 @@ class AlertRuleDB(Base):
             categories=self.categories_json or [],
             country_codes=self.country_codes_json or [],
             page_types=self.page_types_json or [],
+            keywords=self.keywords_json or [],
             severity=self.severity,
             channels=self.channels_json or [],
             webhook_url=self.webhook_url or "",
