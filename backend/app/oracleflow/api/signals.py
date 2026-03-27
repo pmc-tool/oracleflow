@@ -128,11 +128,12 @@ def list_signals():
         # Works on SQLite (cast JSON to text + ILIKE) and PostgreSQL alike.
         entity = request.args.get('entity', '').strip()
         if entity:
-            # Search only within the "entities" key of raw_data_json to avoid
-            # false positives (e.g. "ETH" matching "Netherlands" in other fields).
-            entity_pattern = f"%{entity}%"
+            # Search for entity as a quoted JSON value within the entities subtree.
+            # Use double-quote wrapping to match JSON array elements precisely.
+            # e.g. searching for "WHO" matches "WHO" in ["WHO", "UN"] but not "who" in prose.
+            entity_pattern = f'%"{entity}"%'
             entity_filter = text(
-                "cast(raw_data_json->'entities' as text) ILIKE :ep"
+                "cast(raw_data_json->'entities' as text) LIKE :ep"
             ).bindparams(ep=entity_pattern)
             stmt = stmt.where(entity_filter)
             count_stmt = count_stmt.where(entity_filter)

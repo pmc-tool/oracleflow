@@ -14,30 +14,38 @@ DB_URL = "postgresql://oracleflow:oracleflow@localhost:5433/oracleflow"
 BATCH_SIZE = 100
 
 # ---------------------------------------------------------------------------
-# Entity extraction (copied from signal_extractor.py)
+# Entity extraction (copied from signal_extractor.py -- with false-positive fixes)
 # ---------------------------------------------------------------------------
 
+STOP_WORDS = {
+    "a", "an", "the", "on", "in", "at", "it", "is", "to", "as", "or", "so",
+    "no", "go", "do", "up", "by", "we", "he", "if", "my",
+}
+
 TICKERS = {
-    'AAPL', 'MSFT', 'GOOGL', 'AMZN', 'NVDA', 'META', 'TSLA', 'BRK.B', 'JPM', 'V',
-    'UNH', 'JNJ', 'WMT', 'MA', 'PG', 'XOM', 'HD', 'CVX', 'MRK', 'ABBV',
-    'LLY', 'KO', 'PEP', 'COST', 'AVGO', 'MCD', 'TMO', 'CSCO', 'ACN', 'ABT',
+    # S&P 500 top 50 (3+ chars only)
+    'AAPL', 'MSFT', 'GOOGL', 'AMZN', 'NVDA', 'META', 'TSLA', 'BRK.B', 'JPM',
+    'UNH', 'JNJ', 'WMT', 'PEP', 'XOM', 'CVX', 'MRK', 'ABBV',
+    'LLY', 'COST', 'AVGO', 'MCD', 'TMO', 'CSCO', 'ACN', 'ABT',
     'DHR', 'ADBE', 'CRM', 'NFLX', 'TXN', 'CMCSA', 'AMD', 'INTC', 'QCOM', 'INTU',
-    'AMAT', 'PYPL', 'BA', 'GE', 'CAT', 'HON', 'IBM', 'GS', 'MS', 'AXP',
+    'AMAT', 'PYPL', 'CAT', 'HON', 'IBM', 'AXP',
+    # S&P 500 next 50 (3+ chars only)
     'ISRG', 'MDLZ', 'GILD', 'ADI', 'REGN', 'VRTX', 'BKNG', 'SYK', 'LRCX', 'PANW',
-    'ADP', 'MMC', 'SBUX', 'DE', 'KLAC', 'BSX', 'CI', 'BMY', 'SCHW', 'TMUS',
-    'MO', 'SNPS', 'CDNS', 'CME', 'FI', 'EOG', 'SO', 'DUK', 'ICE', 'CL',
-    'SHW', 'MCK', 'PLD', 'GD', 'NOC', 'USB', 'APD', 'TGT', 'MMM', 'SPGI',
+    'ADP', 'MMC', 'SBUX', 'KLAC', 'BSX', 'BMY', 'SCHW', 'TMUS',
+    'SNPS', 'CDNS', 'CME', 'EOG', 'DUK', 'ICE',
+    'SHW', 'MCK', 'PLD', 'NOC', 'USB', 'APD', 'TGT', 'MMM', 'SPGI',
     'FDX', 'CCI', 'EMR', 'BDX', 'ORLY', 'NSC', 'COF', 'FTNT', 'AJG', 'ADSK',
-    'TT', 'ECL', 'SRE', 'AFL', 'JCI', 'HUM', 'PSA', 'TRV', 'F', 'GM',
+    # S&P 500 next 100 (3+ chars only)
+    'ECL', 'SRE', 'AFL', 'JCI', 'HUM', 'PSA', 'TRV',
     'AEP', 'ROP', 'MPC', 'PSX', 'VLO', 'OXY', 'DVN', 'HAL', 'SLB', 'FANG',
-    'D', 'PEG', 'EXC', 'ES', 'AIG', 'MET', 'PRU', 'ALL', 'WELL', 'O',
-    'SPG', 'DLR', 'EQIX', 'AMT', 'AVB', 'EQR', 'WEC', 'MSCI', 'FICO', 'IT',
-    'VRSK', 'CPRT', 'ODFL', 'FAST', 'PAYX', 'MCHP', 'ON', 'NXPI', 'GWW', 'STZ',
-    'KMB', 'HSY', 'K', 'GIS', 'SJM', 'HRL', 'MKC', 'CLX', 'CHD', 'MNST',
-    'EL', 'WBA', 'DXCM', 'IDXX', 'MTD', 'IQV', 'A', 'ZBH', 'BAX', 'EW',
-    'ALGN', 'HOLX', 'ZTS', 'LH', 'TECH', 'PKI', 'ILMN', 'CTLT', 'CRL', 'WAT',
+    'PEG', 'EXC', 'AIG', 'MET', 'PRU', 'ALL', 'WELL',
+    'SPG', 'DLR', 'EQIX', 'AMT', 'AVB', 'EQR', 'WEC', 'MSCI', 'FICO',
+    'VRSK', 'CPRT', 'ODFL', 'FAST', 'PAYX', 'MCHP', 'NXPI', 'GWW', 'STZ',
+    'KMB', 'HSY', 'GIS', 'SJM', 'HRL', 'MKC', 'CLX', 'CHD', 'MNST',
+    'WBA', 'DXCM', 'IDXX', 'MTD', 'IQV', 'ZBH', 'BAX',
+    'ALGN', 'HOLX', 'ZTS', 'TECH', 'PKI', 'ILMN', 'CTLT', 'CRL', 'WAT',
     'CARR', 'OTIS', 'LEN', 'DHI', 'PHM', 'NVR', 'LOW', 'POOL', 'WST', 'ROST',
-    'TJX', 'DG', 'DLTR', 'BBY', 'ULTA', 'NKE', 'LULU', 'TPR', 'RL', 'HLT',
+    'TJX', 'DLTR', 'BBY', 'ULTA', 'NKE', 'LULU', 'TPR', 'HLT',
     'BAC', 'ORCL', 'DIS', 'PFE',
     'BTC', 'ETH', 'XRP', 'SOL', 'BNB', 'DOGE', 'ADA', 'AVAX', 'DOT', 'MATIC',
     'LINK', 'UNI',
@@ -184,6 +192,8 @@ def extract_entities(title, summary=''):
     }
 
     for ticker in TICKERS:
+        if ticker.lower() in STOP_WORDS:
+            continue
         if re.search(r'\b' + re.escape(ticker) + r'\b', text_upper):
             entities['tickers'].append(ticker)
 
@@ -192,10 +202,13 @@ def extract_entities(title, summary=''):
 
     seen_orgs = set()
     for org in ORGANIZATIONS:
-        if org.upper() in text_upper or org in combined:
-            if org not in seen_orgs:
-                entities['organizations'].append(org)
-                seen_orgs.add(org)
+        if len(org) <= 4:
+            matched = bool(re.search(r'\b' + re.escape(org) + r'\b', combined))
+        else:
+            matched = org.upper() in text_upper or org in combined
+        if matched and org not in seen_orgs:
+            entities['organizations'].append(org)
+            seen_orgs.add(org)
 
     seen_countries = set()
     for name, code in COUNTRY_MAP.items():

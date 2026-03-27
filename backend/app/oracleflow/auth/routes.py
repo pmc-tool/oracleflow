@@ -2,6 +2,7 @@
 
 import logging
 import re
+import uuid
 from datetime import datetime, timezone
 
 from flask import jsonify, request
@@ -57,12 +58,7 @@ def register():
         # Create organization with free plan defaults
         plan = 'free'
         limits = PLAN_LIMITS[plan]
-        slug = org_name.lower().replace(' ', '-')[:50]
-
-        # Ensure slug uniqueness
-        existing_org = db.query(Organization).filter(Organization.slug == slug).first()
-        if existing_org:
-            return jsonify({"success": False, "error": "Organization name already taken"}), 409
+        slug = org_name.lower().replace(' ', '-')[:40] + '-' + uuid.uuid4().hex[:6]
 
         org = Organization(
             name=org_name,
