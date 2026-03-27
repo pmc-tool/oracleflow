@@ -42,46 +42,58 @@
 
 <script setup>
 import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import BasePanel from '../BasePanel.vue'
+import { listSignals } from '../../api/intelligence'
 
-const chokepoints = ref([
-  {
-    name: 'Strait of Hormuz',
-    status: 'NORMAL',
-    detail: 'Vessels: 42 | Oil: 21M bbl/day',
-  },
-  {
-    name: 'Suez Canal',
-    status: 'ELEVATED',
-    detail: 'Vessels: 38 | Disruption risk',
-  },
-  {
-    name: 'Panama Canal',
-    status: 'NORMAL',
-    detail: 'Vessels: 28 | Drought impact easing',
-  },
-  {
-    name: 'Strait of Malacca',
-    status: 'NORMAL',
-    detail: 'Vessels: 65 | Normal traffic',
-  },
-  {
-    name: 'Bab el-Mandeb',
-    status: 'CRITICAL',
-    detail: 'Vessels: 12 | Houthi attacks ongoing',
-  },
-  {
-    name: 'Taiwan Strait',
-    status: 'ELEVATED',
-    detail: 'Vessels: 55 | Military exercises nearby',
-  },
-])
+const CHOKEPOINT_KEYWORDS = [
+  { name: 'Strait of Hormuz', keywords: ['hormuz', 'persian gulf'] },
+  { name: 'Suez Canal', keywords: ['suez'] },
+  { name: 'Bab el-Mandeb', keywords: ['bab el-mandeb', 'bab al-mandab', 'red sea', 'houthi'] },
+  { name: 'Panama Canal', keywords: ['panama canal'] },
+  { name: 'Strait of Malacca', keywords: ['malacca'] },
+  { name: 'Taiwan Strait', keywords: ['taiwan strait', 'taiwan blockade'] },
+]
 
+const chokepoints = ref([])
 const shippingIndices = ref([
-  { name: 'Baltic Dry Index', value: '1,842', change: '+2.3%', positive: true },
-  { name: 'Container Freight', value: '2,134', change: '-1.1%', positive: false },
-  { name: 'Harpex Index', value: '1,256', change: '+0.8%', positive: true },
+  { name: 'Baltic Dry Index', value: '--', change: '--', positive: true },
+  { name: 'Container Freight', value: '--', change: '--', positive: false },
 ])
+
+function statusFromCount(count, maxAnomaly) {
+  if (count >= 10 || maxAnomaly >= 0.8) return 'CRITICAL'
+  if (count >= 5 || maxAnomaly >= 0.5) return 'ELEVATED'
+  if (count >= 1) return 'MONITORING'
+  return 'NORMAL'
+}
+
+onMounted(async () => {
+  try {
+    const res = await listSignals({ limit: 200, categories: 'supply_chain,geopolitical' })
+    const signals = res.data || res
+    const allSignals = Array.isArray(signals) ? signals : (signals.data || signals.items || [])
+
+    chokepoints.value = CHOKEPOINT_KEYWORDS.map(cp => {
+      const matching = allSignals.filter(s => {
+        const text = ((s.title || '') + ' ' + (s.summary || '')).toLowerCase()
+        return cp.keywords.some(kw => text.includes(kw))
+      })
+      const maxAnomaly = matching.length > 0 ? Math.max(...matching.map(s => s.anomaly_score || 0)) : 0
+      const status = statusFromCount(matching.length, maxAnomaly)
+      return {
+        name: cp.name,
+        status,
+        detail: `${matching.length} signal${matching.length !== 1 ? 's' : ''} | Max anomaly: ${(maxAnomaly * 100).toFixed(0)}%`,
+      }
+    })
+  } catch {
+    // Fallback to static
+    chokepoints.value = CHOKEPOINT_KEYWORDS.map(cp => ({
+      name: cp.name, status: 'UNKNOWN', detail: 'Data unavailable'
+    }))
+  }
+})
 
 function statusColor(status) {
   if (status === 'CRITICAL') return '#ff4444'
