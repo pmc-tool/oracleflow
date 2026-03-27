@@ -40,6 +40,39 @@ logger = logging.getLogger(__name__)
 # Module-level loader instance (caches configs after first load)
 _registry = RegistryLoader()
 
+# ---------------------------------------------------------------------------
+# Baseline risk scores — prevents high-risk countries from showing 0.07
+# Final risk = max(baseline, signal_derived_risk)
+# ---------------------------------------------------------------------------
+BASELINE_RISK: dict[str, float] = {
+    'RU': 0.7,   # Active war, sanctions
+    'UA': 0.8,   # Active war zone
+    'IR': 0.9,   # Active conflict
+    'CN': 0.5,   # Geopolitical tensions
+    'IL': 0.7,   # Active conflict
+    'SY': 0.8,   # Civil war
+    'YE': 0.8,   # Civil war
+    'SD': 0.7,   # Civil conflict
+    'AF': 0.7,   # Taliban regime
+    'MM': 0.6,   # Military junta
+    'KP': 0.7,   # Nuclear threats
+    'VE': 0.5,   # Political crisis
+    'NG': 0.4,   # Security concerns
+    'PK': 0.4,   # Instability
+    'IQ': 0.5,   # Instability
+    'LY': 0.5,   # Instability
+    'SO': 0.6,   # Al-Shabaab
+    'CD': 0.5,   # Eastern Congo conflict
+    'PS': 0.8,   # Active conflict
+    'LB': 0.5,   # Hezbollah tensions
+    'ML': 0.5,   # Sahel instability
+    'BF': 0.5,   # Sahel instability
+    'NE': 0.4,   # Sahel instability
+    'HT': 0.6,   # Gang violence
+    'ET': 0.5,   # Tigray aftermath
+}
+_DEFAULT_BASELINE = 0.2
+
 # Display names for country codes used in signal-based fallback
 COUNTRY_NAMES = {
     'US': 'United States', 'GB': 'United Kingdom', 'CN': 'China', 'RU': 'Russia',
@@ -147,12 +180,15 @@ def get_country(code):
             top_categories = [{"category": r.category, "count": r.cnt} for r in cat_rows]
 
             display_name = COUNTRY_NAMES.get(country_code, country_code)
+            signal_risk = round(float(row.avg_risk), 4) if row.avg_risk else 0.0
+            baseline = BASELINE_RISK.get(country_code, _DEFAULT_BASELINE)
+            overall_risk = round(max(baseline, signal_risk), 4)
             data = {
                 "code": country_code,
                 "name": display_name,
                 "country": display_name,
                 "signal_count": row.signal_count,
-                "overall_risk": round(float(row.avg_risk), 4) if row.avg_risk else 0.0,
+                "overall_risk": overall_risk,
                 "top_categories": top_categories,
                 "source": "signals_fallback",
             }
@@ -179,14 +215,17 @@ def get_country_risk(code):
         result = db.execute(stmt)
         signals = list(result.scalars().all())
 
+        baseline = BASELINE_RISK.get(country_code, _DEFAULT_BASELINE)
+
         if not signals:
             return jsonify({
                 "success": True,
                 "data": {
                     "country_code": country_code,
-                    "overall_risk": 0.0,
+                    "overall_risk": round(baseline, 4),
                     "category_risk": {},
                     "signal_count": 0,
+                    "baseline_risk": round(baseline, 4),
                 }
             })
 
@@ -199,13 +238,16 @@ def get_country_risk(code):
         for cat, scores in category_scores.items():
             category_risk[cat] = round(sum(scores) / len(scores), 4) if scores else 0.0
 
-        overall_risk = round(
+        signal_derived_risk = round(
             sum(s.anomaly_score for s in signals) / len(signals), 4
         )
+        overall_risk = round(max(baseline, signal_derived_risk), 4)
 
         data = {
             "country_code": country_code,
             "overall_risk": overall_risk,
+            "signal_derived_risk": signal_derived_risk,
+            "baseline_risk": round(baseline, 4),
             "category_risk": category_risk,
             "signal_count": len(signals),
         }

@@ -11,25 +11,42 @@ logger = logging.getLogger(__name__)
 
 ACLED_API = "https://api.acleddata.com/acled/read"
 
+
 def fetch_conflicts(db: Session) -> list[Signal]:
-    """Fetch recent conflict events. Works without API key (limited)."""
+    """Fetch recent conflict events. Uses ACLED API key if available."""
     try:
-        # ACLED allows limited access without key
         end_date = datetime.now().strftime("%Y-%m-%d")
         start_date = (datetime.now() - timedelta(days=7)).strftime("%Y-%m-%d")
 
-        resp = requests.get(ACLED_API, params={
+        params = {
             "event_date": f"{start_date}|{end_date}",
             "event_date_where": "BETWEEN",
             "limit": 50,
-        }, timeout=15)
+        }
+
+        # Use ACLED credentials if available in environment
+        acled_email = os.environ.get("ACLED_EMAIL", "")
+        acled_key = os.environ.get("ACLED_PASSWORD", "")
+        if acled_email and acled_key:
+            params["key"] = acled_key
+            params["email"] = acled_email
+            logger.info("Using authenticated ACLED API access")
+        else:
+            logger.info("No ACLED credentials found, attempting unauthenticated access")
+
+        resp = requests.get(ACLED_API, params=params, timeout=15)
 
         if resp.status_code != 200:
-            # Fallback: generate placeholder conflict data from known hotspots
+            logger.warning(f"ACLED API returned {resp.status_code}, falling back to placeholders")
             return _generate_placeholder_conflicts(db)
 
         data = resp.json()
         events = data.get("data", [])
+
+        if not events:
+            logger.info("ACLED API returned 0 events, using placeholders")
+            return _generate_placeholder_conflicts(db)
+
     except Exception as e:
         logger.debug(f"ACLED fetch failed: {e}, using placeholders")
         return _generate_placeholder_conflicts(db)
@@ -60,6 +77,9 @@ def fetch_conflicts(db: Session) -> list[Signal]:
         if _entities:
             _raw_data["entities"] = _entities
 
+        # Diversified anomaly score based on event type and fatalities
+        anomaly = _compute_anomaly(event.get("event_type", ""), fatalities)
+
         signal = Signal(
             source="acled",
             signal_type="conflict_event",
@@ -68,9 +88,9 @@ def fetch_conflicts(db: Session) -> list[Signal]:
             title=title,
             summary=_summary,
             raw_data_json=_raw_data,
-            sentiment_score=-0.7,
-            anomaly_score=min(0.5 + fatalities * 0.05, 1.0),
-            importance=min(0.6 + fatalities * 0.04, 1.0),
+            sentiment_score=_compute_sentiment(event.get("event_type", ""), fatalities),
+            anomaly_score=anomaly,
+            importance=min(1.0, anomaly + 0.1),
             timestamp=datetime.now(timezone.utc),
         )
         db.add(signal)
@@ -80,8 +100,67 @@ def fetch_conflicts(db: Session) -> list[Signal]:
     return signals
 
 
+def _compute_anomaly(event_type: str, fatalities: int) -> float:
+    """Compute diversified anomaly score based on event type and fatality count.
+
+    Ranges:
+      - Battles with fatalities:           0.6 - 1.0
+      - Explosions/Remote violence:        0.55 - 1.0
+      - Violence against civilians:        0.5 - 0.95
+      - Protests (no fatalities):          0.2 - 0.35
+      - Protests (with fatalities):        0.5 - 0.8
+      - Strategic developments:            0.3 - 0.5
+      - Riots:                             0.35 - 0.7
+      - Other:                             0.3 - 0.8
+    """
+    et = (event_type or "").lower()
+
+    if "battles" in et or "battle" in et:
+        base = 0.6
+        return min(1.0, base + fatalities * 0.04)
+    elif "explosion" in et or "remote violence" in et:
+        base = 0.55
+        return min(1.0, base + fatalities * 0.05)
+    elif "violence against civilians" in et:
+        base = 0.5
+        return min(0.95, base + fatalities * 0.03)
+    elif "protest" in et:
+        if fatalities > 0:
+            return min(0.8, 0.5 + fatalities * 0.1)
+        return 0.25
+    elif "riot" in et:
+        base = 0.35
+        return min(0.7, base + fatalities * 0.07)
+    elif "strategic" in et:
+        return 0.4
+    else:
+        base = 0.3
+        return min(0.8, base + fatalities * 0.05)
+
+
+def _compute_sentiment(event_type: str, fatalities: int) -> float:
+    """Compute sentiment based on event severity."""
+    et = (event_type or "").lower()
+
+    if fatalities > 20:
+        return -0.95
+    elif fatalities > 10:
+        return -0.85
+    elif fatalities > 5:
+        return -0.75
+    elif fatalities > 0:
+        return -0.6
+
+    # No fatalities
+    if "protest" in et:
+        return -0.4
+    elif "strategic" in et:
+        return -0.3
+    return -0.5
+
+
 def _generate_placeholder_conflicts(db: Session) -> list[Signal]:
-    """Generate realistic placeholder conflict signals for demo."""
+    """Generate realistic placeholder conflict signals for demo with DIVERSIFIED scores."""
     hotspots = [
         {"title": "Battles: Kherson Oblast, Ukraine", "country": "UA", "lat": 46.63, "lng": 32.62, "type": "Battles", "fatalities": 12},
         {"title": "Shelling: Donetsk, Ukraine", "country": "UA", "lat": 48.00, "lng": 37.80, "type": "Explosions/Remote violence", "fatalities": 5},
@@ -99,6 +178,12 @@ def _generate_placeholder_conflicts(db: Session) -> list[Signal]:
     for h in hotspots:
         existing = db.execute(select(Signal).where(Signal.title == h["title"])).scalar_one_or_none()
         if existing:
+            # Update existing placeholder with diversified scores
+            anomaly = _compute_anomaly(h["type"], h["fatalities"])
+            sentiment = _compute_sentiment(h["type"], h["fatalities"])
+            existing.anomaly_score = anomaly
+            existing.sentiment_score = sentiment
+            existing.importance = min(1.0, anomaly + 0.1)
             continue
 
         _summary = f"{h['type']} event with {h['fatalities']} reported fatalities"
@@ -110,6 +195,9 @@ def _generate_placeholder_conflicts(db: Session) -> list[Signal]:
         if _entities:
             _raw_data["entities"] = _entities
 
+        anomaly = _compute_anomaly(h["type"], h["fatalities"])
+        sentiment = _compute_sentiment(h["type"], h["fatalities"])
+
         signal = Signal(
             source="acled",
             signal_type="conflict_event",
@@ -118,9 +206,9 @@ def _generate_placeholder_conflicts(db: Session) -> list[Signal]:
             title=h["title"],
             summary=_summary,
             raw_data_json=_raw_data,
-            sentiment_score=-0.8,
-            anomaly_score=min(0.5 + h["fatalities"] * 0.05, 1.0),
-            importance=min(0.6 + h["fatalities"] * 0.04, 1.0),
+            sentiment_score=sentiment,
+            anomaly_score=anomaly,
+            importance=min(1.0, anomaly + 0.1),
             timestamp=datetime.now(timezone.utc),
         )
         db.add(signal)
