@@ -98,18 +98,23 @@ def list_signals():
         # substring false positives (e.g. "APT" matching "capture").
         if search:
             if len(search) < 5:
-                keyword = f"% {search} %"
-                # Also match at start/end of string
-                kw_start = f"{search} %"
-                kw_end = f"% {search}"
-                search_filter = or_(
-                    Signal.title.ilike(keyword),
-                    Signal.title.ilike(kw_start),
-                    Signal.title.ilike(kw_end),
-                    Signal.summary.ilike(keyword),
-                    Signal.summary.ilike(kw_start),
-                    Signal.summary.ilike(kw_end),
-                )
+                search_term = search
+                # Match at word boundaries — start of text, after space/punctuation,
+                # before space/punctuation/end
+                patterns = [
+                    f'% {search_term} %',     # middle of text
+                    f'{search_term} %',        # start of text
+                    f'% {search_term}',        # end of text
+                    f'% {search_term}:%',      # before colon
+                    f'% {search_term},%',      # before comma
+                    f'% {search_term}.%',      # before period
+                    f'%-{search_term}%',       # hyphenated (e.g. FDA-approved)
+                    f'%({search_term})%',      # parenthesized
+                ]
+                conditions = [Signal.title.ilike(p) for p in patterns]
+                # Also check summary
+                conditions += [Signal.summary.ilike(p) for p in patterns]
+                search_filter = or_(*conditions)
             else:
                 keyword = f"%{search}%"
                 search_filter = or_(

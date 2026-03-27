@@ -22,6 +22,21 @@ STOP_WORDS = {
     "no", "go", "do", "up", "by", "we", "he", "if", "my",
 }
 
+TICKER_ALIASES = {
+    'APPLE': 'AAPL', 'MICROSOFT': 'MSFT', 'GOOGLE': 'GOOGL', 'ALPHABET': 'GOOGL',
+    'AMAZON': 'AMZN', 'NVIDIA': 'NVDA', 'META': 'META', 'FACEBOOK': 'META',
+    'TESLA': 'TSLA', 'NETFLIX': 'NFLX', 'BITCOIN': 'BTC', 'ETHEREUM': 'ETH',
+    'OPEC': 'OPEC', 'NATO': 'NATO',
+    'JPMORGAN': 'JPM', 'GOLDMAN SACHS': 'GS', 'MORGAN STANLEY': 'MS',
+    'BOEING': 'BA', 'LOCKHEED': 'LMT', 'RAYTHEON': 'RTX',
+    'EXXON': 'XOM', 'CHEVRON': 'CVX', 'SHELL': 'SHEL',
+    'PFIZER': 'PFE', 'MODERNA': 'MRNA', 'JOHNSON': 'JNJ',
+    'WALMART': 'WMT', 'COSTCO': 'COST', 'DISNEY': 'DIS',
+    'INTEL': 'INTC', 'AMD': 'AMD', 'QUALCOMM': 'QCOM',
+    'MAERSK': 'MAERSK', 'EVERGREEN': 'EVERGREEN',
+    'COINBASE': 'COIN', 'RIPPLE': 'XRP', 'SOLANA': 'SOL',
+}
+
 TICKERS = {
     # S&P 500 top 50 (3+ chars only)
     'AAPL', 'MSFT', 'GOOGL', 'AMZN', 'NVDA', 'META', 'TSLA', 'BRK.B', 'JPM',
@@ -191,11 +206,19 @@ def extract_entities(title, summary=''):
         'organizations': [],
     }
 
+    matched_tickers = set()
     for ticker in TICKERS:
         if ticker.lower() in STOP_WORDS:
             continue
         if re.search(r'\b' + re.escape(ticker) + r'\b', text_upper):
-            entities['tickers'].append(ticker)
+            matched_tickers.add(ticker)
+
+    # Also check ticker aliases (company names -> ticker symbols)
+    for alias, ticker in TICKER_ALIASES.items():
+        if re.search(r'\b' + re.escape(alias) + r'\b', text_upper):
+            matched_tickers.add(ticker)
+
+    entities['tickers'] = sorted(matched_tickers)
 
     for m in CVE_PATTERN.finditer(combined):
         entities['cves'].append(m.group())
@@ -242,17 +265,36 @@ def extract_entities(title, summary=''):
 
 def estimate_sentiment(title, summary=''):
     txt = (title + ' ' + (summary or '')).lower()
+    words = txt.split()
 
-    positive_words = ['peace', 'agreement', 'growth', 'recovery', 'breakthrough', 'ceasefire',
-                      'cooperation', 'aid', 'rescue', 'progress', 'reform', 'victory', 'success',
-                      'surge', 'rally', 'boost', 'gain', 'improve', 'resolve', 'support']
-    negative_words = ['kill', 'attack', 'crash', 'crisis', 'war', 'bomb', 'death', 'collapse',
-                      'threat', 'sanctions', 'strike', 'invasion', 'earthquake', 'flood', 'fire',
-                      'ransomware', 'breach', 'hack', 'explosion', 'conflict', 'refugee', 'famine',
-                      'recession', 'default', 'plunge', 'shutdown', 'disaster', 'emergency']
+    positive_keywords = [
+        'peace', 'agreement', 'growth', 'recovery', 'breakthrough', 'ceasefire',
+        'cooperation', 'aid', 'rescue', 'progress', 'reform', 'victory', 'success',
+        'surge', 'rally', 'boost', 'gain', 'improve', 'resolve', 'support',
+        'deal', 'agree', 'launch', 'announce', 'expand', 'partner', 'approve',
+        'win', 'celebrat', 'open', 'welcome', 'achiev', 'complet', 'develop',
+        'innovat', 'invest', 'promot', 'protect', 'strengthen', 'stabiliz', 'recover',
+    ]
+    negative_keywords = [
+        'kill', 'attack', 'crash', 'crisis', 'war', 'bomb', 'death', 'collapse',
+        'threat', 'sanction', 'strike', 'invasion', 'earthquake', 'flood', 'fire',
+        'ransomware', 'breach', 'hack', 'explosion', 'conflict', 'refugee', 'famine',
+        'recession', 'default', 'plunge', 'shutdown', 'disaster', 'emergency',
+        'warn', 'threaten', 'fear', 'cut', 'fall', 'decline', 'drop', 'fail',
+        'lose', 'suspend', 'block', 'reject', 'oppose', 'delay', 'cancel',
+        'violat', 'arrest', 'charge', 'condemn', 'tension', 'dispute',
+        'controversy', 'scandal', 'fraud', 'corruption', 'unemploy',
+    ]
 
-    pos = sum(1 for w in positive_words if w in txt)
-    neg = sum(1 for w in negative_words if w in txt)
+    def _stem_match(keywords):
+        count = 0
+        for kw in keywords:
+            if any(w.startswith(kw) for w in words):
+                count += 1
+        return count
+
+    pos = _stem_match(positive_keywords)
+    neg = _stem_match(negative_keywords)
 
     if pos + neg == 0:
         return 0.0

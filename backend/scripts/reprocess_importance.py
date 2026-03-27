@@ -83,6 +83,32 @@ SOURCE_TIERS = {
 DEFAULT_IMPORTANCE = 0.5
 
 
+def content_importance(title):
+    """Score content importance based on title keywords. Returns adjustment in [-0.05, 0.15]."""
+    t = title.lower()
+    adjustment = 0.0
+
+    high_keywords = ['breaking', 'urgent', 'exclusive']
+    medium_keywords = ['analysis', 'report', 'investigation']
+    low_keywords = ['opinion', 'editorial', 'commentary']
+
+    if any(kw in t for kw in high_keywords):
+        adjustment += 0.15
+    if any(kw in t for kw in medium_keywords):
+        adjustment += 0.10
+    if any(kw in t for kw in low_keywords):
+        adjustment -= 0.05
+
+    return adjustment
+
+
+def importance_for_source(source_name, title=''):
+    """Compute importance from source tier + content keywords, clamped to [0.1, 1.0]."""
+    base = SOURCE_TIERS.get(source_name, DEFAULT_IMPORTANCE)
+    adjustment = content_importance(title) if title else 0.0
+    return round(max(0.1, min(1.0, base + adjustment)), 2)
+
+
 # ---------------------------------------------------------------------------
 # Anomaly recalculation (mirrors rss.py _estimate_anomaly)
 # ---------------------------------------------------------------------------
@@ -164,8 +190,8 @@ def main():
 
             source_name = raw_data.get("source_name", "")
 
-            # Compute new importance from source tier
-            new_importance = SOURCE_TIERS.get(source_name, DEFAULT_IMPORTANCE)
+            # Compute new importance from source tier + content keywords
+            new_importance = importance_for_source(source_name, title)
 
             # Recalculate anomaly score with wider spread
             combined_text = title + " " + summary

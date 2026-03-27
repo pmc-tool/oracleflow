@@ -82,9 +82,30 @@ SOURCE_TIERS: dict[str, float] = {
 _DEFAULT_IMPORTANCE = 0.5
 
 
-def _importance_for_source(source_name: str) -> float:
-    """Look up the importance tier for a given source name."""
-    return SOURCE_TIERS.get(source_name, _DEFAULT_IMPORTANCE)
+def _content_importance(title: str) -> float:
+    """Score content importance based on title keywords. Returns adjustment in [-0.05, 0.15]."""
+    t = title.lower()
+    adjustment = 0.0
+
+    high_keywords = ['breaking', 'urgent', 'exclusive']
+    medium_keywords = ['analysis', 'report', 'investigation']
+    low_keywords = ['opinion', 'editorial', 'commentary']
+
+    if any(kw in t for kw in high_keywords):
+        adjustment += 0.15
+    if any(kw in t for kw in medium_keywords):
+        adjustment += 0.10
+    if any(kw in t for kw in low_keywords):
+        adjustment -= 0.05
+
+    return adjustment
+
+
+def _importance_for_source(source_name: str, title: str = '') -> float:
+    """Compute importance from source tier + content keywords, clamped to [0.1, 1.0]."""
+    base = SOURCE_TIERS.get(source_name, _DEFAULT_IMPORTANCE)
+    adjustment = _content_importance(title) if title else 0.0
+    return round(max(0.1, min(1.0, base + adjustment)), 2)
 
 
 # Prefixes commonly added by feeds that should be stripped for dedup
@@ -112,19 +133,42 @@ def _title_key(title: str) -> str:
 
 
 def _estimate_sentiment(title: str, summary: str = '') -> float:
-    """Keyword-based sentiment scorer. Returns a value in [-1.0, 1.0]."""
+    """Keyword-based sentiment scorer. Returns a value in [-1.0, 1.0].
+
+    Uses stem-prefix matching: each keyword matches any word in the text
+    that starts with it (e.g. "threaten" matches "threatens", "threatening").
+    """
     text = (title + ' ' + (summary or '')).lower()
+    words = text.split()
 
-    positive_words = ['peace', 'agreement', 'growth', 'recovery', 'breakthrough', 'ceasefire',
-                      'cooperation', 'aid', 'rescue', 'progress', 'reform', 'victory', 'success',
-                      'surge', 'rally', 'boost', 'gain', 'improve', 'resolve', 'support']
-    negative_words = ['kill', 'attack', 'crash', 'crisis', 'war', 'bomb', 'death', 'collapse',
-                      'threat', 'sanctions', 'strike', 'invasion', 'earthquake', 'flood', 'fire',
-                      'ransomware', 'breach', 'hack', 'explosion', 'conflict', 'refugee', 'famine',
-                      'recession', 'default', 'plunge', 'shutdown', 'disaster', 'emergency']
+    positive_keywords = [
+        'peace', 'agreement', 'growth', 'recovery', 'breakthrough', 'ceasefire',
+        'cooperation', 'aid', 'rescue', 'progress', 'reform', 'victory', 'success',
+        'surge', 'rally', 'boost', 'gain', 'improve', 'resolve', 'support',
+        'deal', 'agree', 'launch', 'announce', 'expand', 'partner', 'approve',
+        'win', 'celebrat', 'open', 'welcome', 'achiev', 'complet', 'develop',
+        'innovat', 'invest', 'promot', 'protect', 'strengthen', 'stabiliz', 'recover',
+    ]
+    negative_keywords = [
+        'kill', 'attack', 'crash', 'crisis', 'war', 'bomb', 'death', 'collapse',
+        'threat', 'sanction', 'strike', 'invasion', 'earthquake', 'flood', 'fire',
+        'ransomware', 'breach', 'hack', 'explosion', 'conflict', 'refugee', 'famine',
+        'recession', 'default', 'plunge', 'shutdown', 'disaster', 'emergency',
+        'warn', 'threaten', 'fear', 'cut', 'fall', 'decline', 'drop', 'fail',
+        'lose', 'suspend', 'block', 'reject', 'oppose', 'delay', 'cancel',
+        'violat', 'arrest', 'charge', 'condemn', 'tension', 'dispute',
+        'controversy', 'scandal', 'fraud', 'corruption', 'unemploy',
+    ]
 
-    pos = sum(1 for w in positive_words if w in text)
-    neg = sum(1 for w in negative_words if w in text)
+    def _stem_match(keywords):
+        count = 0
+        for kw in keywords:
+            if any(w.startswith(kw) for w in words):
+                count += 1
+        return count
+
+    pos = _stem_match(positive_keywords)
+    neg = _stem_match(negative_keywords)
 
     if pos + neg == 0:
         return 0.0
@@ -229,7 +273,7 @@ def fetch_global_feeds(db: Session, max_per_feed: int = 5) -> list[Signal]:
                     raw_data_json=raw_data,
                     sentiment_score=_estimate_sentiment(title, summary),
                     anomaly_score=_estimate_anomaly(title + " " + summary, source_name=source_name),
-                    importance=_importance_for_source(source_name),
+                    importance=_importance_for_source(source_name, title),
                     timestamp=datetime.now(timezone.utc),
                 )
                 db.add(signal)
@@ -427,7 +471,7 @@ def fetch_country_rss(db: Session, country_code: str) -> list[Signal]:
                         raw_data_json=_raw_data,
                         sentiment_score=_estimate_sentiment(title, _summary),
                         anomaly_score=_estimate_anomaly(title + " " + _summary, source_name=_source_name),
-                        importance=_importance_for_source(_source_name),
+                        importance=_importance_for_source(_source_name, title),
                         timestamp=datetime.now(timezone.utc),
                     )
                     db.add(signal)

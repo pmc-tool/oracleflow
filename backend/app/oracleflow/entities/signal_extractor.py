@@ -21,6 +21,21 @@ STOP_WORDS = {
 # common English words.  Short-symbol stocks (A, V, C, F, GE, etc.) are
 # intentionally excluded.
 # ---------------------------------------------------------------------------
+TICKER_ALIASES = {
+    'APPLE': 'AAPL', 'MICROSOFT': 'MSFT', 'GOOGLE': 'GOOGL', 'ALPHABET': 'GOOGL',
+    'AMAZON': 'AMZN', 'NVIDIA': 'NVDA', 'META': 'META', 'FACEBOOK': 'META',
+    'TESLA': 'TSLA', 'NETFLIX': 'NFLX', 'BITCOIN': 'BTC', 'ETHEREUM': 'ETH',
+    'OPEC': 'OPEC', 'NATO': 'NATO',  # These are orgs but people search them as tickers
+    'JPMORGAN': 'JPM', 'GOLDMAN SACHS': 'GS', 'MORGAN STANLEY': 'MS',
+    'BOEING': 'BA', 'LOCKHEED': 'LMT', 'RAYTHEON': 'RTX',
+    'EXXON': 'XOM', 'CHEVRON': 'CVX', 'SHELL': 'SHEL',
+    'PFIZER': 'PFE', 'MODERNA': 'MRNA', 'JOHNSON': 'JNJ',
+    'WALMART': 'WMT', 'COSTCO': 'COST', 'DISNEY': 'DIS',
+    'INTEL': 'INTC', 'AMD': 'AMD', 'QUALCOMM': 'QCOM',
+    'MAERSK': 'MAERSK', 'EVERGREEN': 'EVERGREEN',  # Shipping
+    'COINBASE': 'COIN', 'RIPPLE': 'XRP', 'SOLANA': 'SOL',
+}
+
 TICKERS = {
     # S&P 500 top 50 (3+ chars only)
     'AAPL', 'MSFT', 'GOOGL', 'AMZN', 'NVDA', 'META', 'TSLA', 'BRK.B', 'JPM',
@@ -274,11 +289,19 @@ def extract_entities(title, summary=''):
     }
 
     # Tickers (word-boundary match on uppercased text, skip stop words)
+    matched_tickers = set()
     for ticker in TICKERS:
         if ticker.lower() in STOP_WORDS:
             continue
         if re.search(r'\b' + re.escape(ticker) + r'\b', text_upper):
-            entities['tickers'].append(ticker)
+            matched_tickers.add(ticker)
+
+    # Also check ticker aliases (company names -> ticker symbols)
+    for alias, ticker in TICKER_ALIASES.items():
+        if re.search(r'\b' + re.escape(alias) + r'\b', text_upper):
+            matched_tickers.add(ticker)
+
+    entities['tickers'] = sorted(matched_tickers)
 
     # CVEs (case-insensitive in original text)
     for m in CVE_PATTERN.finditer(combined):
