@@ -92,7 +92,7 @@ const forecasts = computed(() => {
 
     return {
       id: sim.id,
-      title: sim.scenario || sim.title || 'Unnamed Scenario',
+      title: sim.scenario || sim.title || sim.simulation_requirement || `Scenario #${sim.id}`,
       probability,
       impact,
       signalCount,

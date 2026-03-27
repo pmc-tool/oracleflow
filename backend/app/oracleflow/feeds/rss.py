@@ -296,7 +296,7 @@ def fetch_global_feeds(db: Session, max_per_feed: int = 5) -> list[Signal]:
                 continue
 
             for entry in feed.entries[:max_per_feed]:
-                title = (entry.get("title") or "")[:200].strip()
+                title = re.sub(r'<[^>]+>', '', (entry.get("title") or ""))[:200].strip()
                 if not title:
                     continue
 
