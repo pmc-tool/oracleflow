@@ -41,7 +41,6 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
 import { ref, onMounted } from 'vue'
 import BasePanel from '../BasePanel.vue'
 import { listSignals } from '../../api/intelligence'
