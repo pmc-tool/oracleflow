@@ -5,7 +5,7 @@ import logging
 from flask import g, jsonify, request
 
 logger = logging.getLogger(__name__)
-from sqlalchemy import func, select
+from sqlalchemy import func, or_, select
 from sqlalchemy.orm import joinedload
 
 from . import entities_bp
@@ -30,7 +30,8 @@ def list_entities():
         limit = min(limit, 200)
         offset = request.args.get('offset', 0, type=int)
 
-        org_filter = Entity.organization_id == g.org_id
+        # Show global entities (org_id NULL) + org-specific entities
+        org_filter = or_(Entity.organization_id == g.org_id, Entity.organization_id.is_(None))
         stmt = select(Entity).where(org_filter)
         count_stmt = select(func.count()).select_from(Entity).where(org_filter)
 
