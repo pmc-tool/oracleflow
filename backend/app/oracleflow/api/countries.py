@@ -252,9 +252,9 @@ def get_country_risk(code):
         # More signals = more trust in signal data; fewer = lean on baseline.
         signal_count = len(signals)
         if signal_count >= 20:
-            overall_risk = round(signal_derived_risk * 0.7 + baseline * 0.3, 4)
+            overall_risk = round(max(signal_derived_risk, baseline * 0.8) * 0.6 + baseline * 0.4, 4)
         elif signal_count >= 5:
-            overall_risk = round(signal_derived_risk * 0.5 + baseline * 0.5, 4)
+            overall_risk = round(max(signal_derived_risk, baseline * 0.7) * 0.5 + baseline * 0.5, 4)
         else:
             overall_risk = round(signal_derived_risk * 0.2 + baseline * 0.8, 4)
 
