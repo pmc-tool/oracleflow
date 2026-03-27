@@ -74,10 +74,28 @@
         </table>
       </div>
 
-      <!-- Graph placeholder -->
-      <div class="section-box graph-placeholder">
-        <h2 class="section-heading">Relationship Graph</h2>
-        <div class="placeholder-content">Graph visualization coming soon</div>
+      <!-- Related Signals -->
+      <div class="section-box">
+        <h2 class="section-heading">Related Signals ({{ relatedSignals.length }})</h2>
+        <div v-if="signalsLoading" class="empty-state">Loading signals...</div>
+        <div v-else-if="!relatedSignals.length" class="empty-state">No signals found mentioning this entity</div>
+        <div v-else class="signal-list">
+          <div v-for="sig in relatedSignals" :key="sig.id" class="signal-item">
+            <div class="signal-item__header">
+              <span class="badge badge-source">{{ sig.source }}</span>
+              <span class="badge badge-cat">{{ sig.category }}</span>
+              <span class="signal-item__time">{{ formatRelative(sig.timestamp) }}</span>
+            </div>
+            <div class="signal-item__title">
+              <a v-if="sig.source_url" :href="sig.source_url" target="_blank" class="title-link">{{ sig.title }}</a>
+              <span v-else>{{ sig.title }}</span>
+            </div>
+            <div class="signal-item__meta">
+              <span>Anomaly: {{ (sig.anomaly_score * 100).toFixed(0) }}%</span>
+              <span>Sentiment: {{ sig.sentiment_score > 0 ? '+' : '' }}{{ sig.sentiment_score.toFixed(2) }}</span>
+            </div>
+          </div>
+        </div>
       </div>
     </template>
 
@@ -87,21 +105,33 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { getEntity } from '../api/intelligence'
+import { getEntity, listSignals } from '../api/intelligence'
 
 const props = defineProps({
   entityId: { type: [String, Number], required: true }
 })
 
 const loading = ref(true)
+const signalsLoading = ref(true)
 const error = ref('')
 const entity = ref(null)
 const sources = ref([])
 const relationships = ref([])
+const relatedSignals = ref([])
 
 const formatTime = (ts) => {
   if (!ts) return '--'
   return new Date(ts).toLocaleString()
+}
+
+const formatRelative = (ts) => {
+  if (!ts) return '--'
+  const diff = Date.now() - new Date(ts).getTime()
+  const mins = Math.floor(diff / 60000)
+  if (mins < 60) return `${mins}m ago`
+  const hrs = Math.floor(mins / 60)
+  if (hrs < 24) return `${hrs}h ago`
+  return `${Math.floor(hrs / 24)}d ago`
 }
 
 onMounted(async () => {
@@ -111,10 +141,20 @@ onMounted(async () => {
     entity.value = d
     sources.value = d.sources || []
     relationships.value = d.relationships || []
+
+    // Fetch signals mentioning this entity
+    if (d.name) {
+      try {
+        const sigRes = await listSignals({ entity: d.name, limit: 20 })
+        const sigData = sigRes.data || sigRes
+        relatedSignals.value = Array.isArray(sigData) ? sigData : (sigData.data || sigData.items || [])
+      } catch { /* ignore */ }
+    }
   } catch (e) {
     error.value = 'Failed to load entity: ' + e.message
   } finally {
     loading.value = false
+    signalsLoading.value = false
   }
 })
 </script>
@@ -299,5 +339,66 @@ onMounted(async () => {
   font-size: 0.85rem;
   border: 1px dashed #333;
   min-height: 140px;
+}
+
+.signal-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.signal-item {
+  border: 1px solid #222;
+  padding: 14px;
+  background: #0a0a0a;
+  transition: border-color 0.15s;
+}
+
+.signal-item:hover { border-color: #FF4500; }
+
+.signal-item__header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.signal-item__time {
+  margin-left: auto;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  color: #666;
+}
+
+.signal-item__title {
+  font-size: 0.9rem;
+  font-weight: 500;
+  margin-bottom: 6px;
+  line-height: 1.4;
+}
+
+.title-link {
+  color: #e8e8e8;
+  text-decoration: none;
+}
+
+.title-link:hover { text-decoration: underline; color: #FF4500; }
+
+.signal-item__meta {
+  display: flex;
+  gap: 16px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  color: #888;
+}
+
+.badge-source {
+  border-color: #444;
+  color: #CCC;
+}
+
+.badge-cat {
+  border-color: #FF4500;
+  color: #FF4500;
 }
 </style>
