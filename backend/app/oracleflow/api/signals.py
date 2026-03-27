@@ -161,11 +161,11 @@ def list_signals():
         # Sort parameter support
         sort = request.args.get('sort', 'timestamp')
         if sort == 'anomaly':
-            stmt = stmt.order_by(Signal.anomaly_score.desc())
+            stmt = stmt.order_by(Signal.anomaly_score.desc().nullslast())
         elif sort == 'importance':
-            stmt = stmt.order_by(Signal.importance.desc())
+            stmt = stmt.order_by(Signal.importance.desc().nullslast())
         else:
-            stmt = stmt.order_by(Signal.timestamp.desc())
+            stmt = stmt.order_by(Signal.timestamp.desc().nullslast())
         stmt = stmt.limit(limit).offset(offset)
         result = db.execute(stmt)
         signals = list(result.scalars().all())
@@ -301,15 +301,27 @@ def get_feed_health():
         return jsonify({"success": False, "error": "An internal error occurred"}), 500
 
 
+@signals_bp.route('/<int:signal_id>/analyze', methods=['GET', 'POST'])
+@optional_auth
+def analyze_signal_by_id(signal_id):
+    """Convenience route: GET/POST /api/signals/<id>/analyze."""
+    return _do_analyze(signal_id)
+
+
 @signals_bp.route('/analyze', methods=['POST'])
 @optional_auth
 def analyze_signal():
-    """Generate AI impact analysis for a signal."""
+    """Generate AI impact analysis for a signal (POST with JSON body)."""
     data = request.get_json()
     if not data or not data.get('signal_id'):
         return jsonify({"success": False, "error": "signal_id is required"}), 400
 
     signal_id = data['signal_id']
+    return _do_analyze(signal_id)
+
+
+def _do_analyze(signal_id):
+    """Shared analysis logic used by both endpoint variants."""
     db = _get_db()
     try:
         stmt = select(Signal).where(Signal.id == signal_id)

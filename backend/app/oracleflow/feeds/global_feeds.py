@@ -326,11 +326,17 @@ GLOBAL_FEEDS = [
     ("https://ofac.treasury.gov/recent-actions", "geopolitical", "OFAC Sanctions"),
     ("https://www.iea.org/rss", "economy", "IEA"),
     ("https://www.eia.gov/rss/", "economy", "EIA Main"),
+    ("https://www.usda.gov/rss/home.xml", "economy", "USDA"),
+    ("https://www.ers.usda.gov/rss/latest-publications.xml", "economy", "USDA ERS"),
+    ("https://www.world-grain.com/rss", "economy", "World Grain"),
+    ("https://www.agweb.com/rss.xml", "economy", "AgWeb"),
+    ("https://www.feedstuffs.com/rss.xml", "economy", "Feedstuffs"),
+    ("https://www.agriculture.com/rss/news", "economy", "Agriculture.com"),
     ("https://alerts.weather.gov/cap/us.php?x=0", "climate", "NOAA Weather Alerts"),
     ("https://www.nhc.noaa.gov/index-at.xml", "climate", "NHC Atlantic Hurricane"),
     ("https://www.nhc.noaa.gov/index-ep.xml", "climate", "NHC East Pacific Hurricane"),
     ("https://googleprojectzero.blogspot.com/feeds/posts/default", "cyber", "Google Project Zero"),
 ]
 
-# Total: 236 feeds across 12+ categories (includes humanitarian, supply chain, regulatory & weather packs)
+# Total: 242 feeds across 12+ categories (includes humanitarian, supply chain, agriculture, regulatory & weather packs)
 # Expandable — add more by appending to list

@@ -326,8 +326,18 @@ def _create_notifications_for_signal(db, signal, severity, title, message):
                 .where(User.is_active == True)  # noqa: E712
             )
         else:
-            # Global signal (no org) — only notify for truly critical events
-            if signal.anomaly_score is None or signal.anomaly_score < 0.9:
+            # Global signal — use category-specific thresholds.
+            # Finance/crypto signals are meaningful at lower anomaly scores.
+            _category = (signal.category or "").lower()
+            _CATEGORY_THRESHOLDS = {
+                "finance": 0.6,
+                "economy": 0.65,
+                "crypto": 0.6,
+                "cyber": 0.65,
+            }
+            _threshold = _CATEGORY_THRESHOLDS.get(_category, 0.75)
+
+            if signal.anomaly_score is None or signal.anomaly_score < _threshold:
                 return
             user_stmt = (
                 select(User.id, User.organization_id)

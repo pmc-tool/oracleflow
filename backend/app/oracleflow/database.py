@@ -15,9 +15,14 @@ def _migrate_add_columns(engine):
         ("simulations", "organization_id", "INTEGER"),
     ]
     with engine.connect() as conn:
+        # Set a short lock timeout so migrations don't hang
+        try:
+            conn.execute(text("SET lock_timeout = '5s'"))
+        except Exception:
+            pass
+
         for table, column, col_type in migrations:
             try:
-                # Use IF NOT EXISTS to avoid blocking ALTER TABLE on existing columns
                 conn.execute(text(
                     f"ALTER TABLE {table} ADD COLUMN IF NOT EXISTS {column} {col_type}"
                 ))
