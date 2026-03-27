@@ -137,6 +137,10 @@ def _fetch_feeds(app):
             from app.oracleflow.feeds.nasa import fetch_wildfires
             from app.oracleflow.feeds.nvd import fetch_cves
             from app.oracleflow.feeds.gdacs import fetch_gdacs_alerts
+            from app.oracleflow.feeds.clinicaltrials import fetch_clinical_trials
+            from app.oracleflow.feeds.otx import fetch_otx_pulses
+            from app.oracleflow.feeds.usda_fas import fetch_usda_fas
+            from app.oracleflow.feeds.open_fda import fetch_open_fda
 
             rss_signals = fetch_global_feeds(db)
             quake_signals = fetch_earthquakes(db)
@@ -144,13 +148,21 @@ def _fetch_feeds(app):
             fire_signals = fetch_wildfires(db)
             cve_count = fetch_cves(db)
             gdacs_count = fetch_gdacs_alerts(db)
+            clinical_count = fetch_clinical_trials(db)
+            otx_count = fetch_otx_pulses(db)
+            usda_count = fetch_usda_fas(db)
+            fda_count = fetch_open_fda(db)
             db.commit()
-            total = len(rss_signals) + len(quake_signals) + len(conflict_signals) + len(fire_signals) + cve_count + gdacs_count
+            total = (len(rss_signals) + len(quake_signals) + len(conflict_signals)
+                     + len(fire_signals) + cve_count + gdacs_count
+                     + clinical_count + otx_count + usda_count + fda_count)
             if total > 0:
                 logger.info(
                     f"Feed ingest: {len(rss_signals)} RSS + {len(quake_signals)} earthquakes"
                     f" + {len(conflict_signals)} conflicts + {len(fire_signals)} fires"
                     f" + {cve_count} CVEs + {gdacs_count} GDACS alerts"
+                    f" + {clinical_count} clinical trials + {otx_count} OTX pulses"
+                    f" + {usda_count} World Bank + {fda_count} FDA adverse events"
                     f" = {total} new signals"
                 )
         except Exception as e:
