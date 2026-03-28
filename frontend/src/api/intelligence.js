@@ -55,6 +55,7 @@ export const getWatchlistItem = (id) => service.get(`/api/watchlist/${id}`)
 export const getWatchlistSignals = (id, params = {}) => service.get(`/api/watchlist/${id}/signals`, { params })
 export const getWatchlistSentiment = (id) => service.get(`/api/watchlist/${id}/sentiment`)
 export const getWatchlistCompare = () => service.get('/api/watchlist/compare')
+export const getWatchlistBrief = (id) => service.get(`/api/watchlist/${id}/brief`)
 export const deleteWatchlistItem = (id) => service.delete(`/api/watchlist/${id}`)
 export const updateWatchlistItem = (id, data) => service.put(`/api/watchlist/${id}`, data)
 

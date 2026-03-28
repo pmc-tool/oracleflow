@@ -2,9 +2,13 @@
 
 import logging
 import re
+import time
+from collections import defaultdict
 from datetime import datetime, timezone
+from functools import wraps
 from urllib.parse import quote_plus, urlparse
 
+import requests as http_requests
 from flask import g, jsonify, request
 from sqlalchemy import and_, func, or_, select, cast, Date
 
@@ -15,6 +19,61 @@ from app.oracleflow.models.signal import Signal, AlertRuleDB
 from app.oracleflow.models.watchlist import WatchlistItem
 
 logger = logging.getLogger(__name__)
+
+# ---------------------------------------------------------------------------
+# Rate limiting (same pattern as countries.py)
+# ---------------------------------------------------------------------------
+_rate_limits: dict[str, list[float]] = defaultdict(list)
+
+
+def rate_limit(max_calls=10, window=60):
+    def decorator(f):
+        @wraps(f)
+        def decorated(*args, **kwargs):
+            key = request.remote_addr
+            now = time.time()
+            _rate_limits[key] = [t for t in _rate_limits[key] if now - t < window]
+            if len(_rate_limits[key]) >= max_calls:
+                return jsonify({"success": False, "error": "Rate limit exceeded"}), 429
+            _rate_limits[key].append(now)
+            return f(*args, **kwargs)
+        return decorated
+    return decorator
+
+
+# ---------------------------------------------------------------------------
+# Bangla / multilingual keyword translations for well-known entities
+# ---------------------------------------------------------------------------
+COMMON_TRANSLATIONS: dict[str, list[str]] = {
+    'Jamaat-e-Islami': ['জামায়াতে ইসলামী', 'জামায়াত', 'JI'],
+    'Bangladesh Nationalist Party': ['বিএনপি', 'BNP', 'বাংলাদেশ জাতীয়তাবাদী দল'],
+    'Awami League': ['আওয়ামী লীগ', 'AL'],
+    'Rohingya': ['রোহিঙ্গা'],
+    'UNHCR': ['ইউএনএইচসিআর'],
+    'Hefazat-e-Islam': ['হেফাজতে ইসলাম', 'Hefazat'],
+    'Jatiya Party': ['জাতীয় পার্টি', 'JP'],
+    'Bangladesh Army': ['বাংলাদেশ সেনাবাহিনী'],
+    'Rapid Action Battalion': ['র\u200d্যাব', 'RAB'],
+    'Sheikh Hasina': ['শেখ হাসিনা'],
+    'Khaleda Zia': ['খালেদা জিয়া'],
+    'Muhammad Yunus': ['মুহাম্মদ ইউনূস', 'Yunus'],
+}
+
+
+def _enrich_keywords_multilingual(name: str, keywords: list[str]) -> list[str]:
+    """Add Bangla/multilingual translations for known entities to the keyword list."""
+    enriched = list(keywords)
+    seen = {kw.lower() for kw in enriched}
+
+    for entity_name, translations in COMMON_TRANSLATIONS.items():
+        # Check if the entity name appears in the watchlist item name (case-insensitive)
+        if entity_name.lower() in name.lower():
+            for t in translations:
+                if t.lower() not in seen:
+                    enriched.append(t)
+                    seen.add(t.lower())
+
+    return enriched
 
 # Country code -> country name for Google News RSS URL generation
 _COUNTRY_NAMES = {
@@ -275,6 +334,9 @@ def create_watchlist_item():
                 seen.add(kw_lower)
                 unique_keywords.append(kw)
         keywords = unique_keywords
+
+        # Enrich with Bangla/multilingual translations for known entities
+        keywords = _enrich_keywords_multilingual(name, keywords)
 
         google_news_rss = _generate_google_news_rss(name, country_code)
         websites = data.get("websites") or []
@@ -714,6 +776,120 @@ def compare_watchlist_items():
     except Exception as e:
         db.rollback()
         logger.exception("Watchlist compare error: %s", e)
+        return jsonify({"success": False, "error": "An internal error occurred"}), 500
+    finally:
+        db.close()
+
+
+# ---------------------------------------------------------------------------
+# GET /api/watchlist/<id>/brief — AI intelligence brief for a watchlist item
+# ---------------------------------------------------------------------------
+@watchlist_bp.route("/<int:item_id>/brief", methods=["GET"])
+@require_auth
+@rate_limit(max_calls=5, window=60)
+def get_watchlist_brief(item_id):
+    """Generate an AI intelligence brief for a watchlist item from recent signals."""
+    db = _get_db()
+    try:
+        item = db.execute(
+            select(WatchlistItem).where(
+                WatchlistItem.id == item_id,
+                WatchlistItem.user_id == g.user_id,
+            )
+        ).scalar_one_or_none()
+
+        if not item:
+            return jsonify({"success": False, "error": "Watchlist item not found"}), 404
+
+        # Fetch last 20 matching signals
+        kw_filter = _build_keyword_filter(item.keywords or [])
+        if kw_filter is None:
+            return jsonify({
+                "success": True,
+                "data": {
+                    "item_id": item.id,
+                    "name": item.name,
+                    "brief": f"No intelligence signals available for {item.name}. Add monitoring sites or wait for feed ingestion.",
+                    "signal_count": 0,
+                }
+            })
+
+        sig_stmt = (
+            select(Signal)
+            .where(kw_filter)
+            .order_by(Signal.timestamp.desc().nullslast())
+            .limit(20)
+        )
+        signals = list(db.execute(sig_stmt).scalars().all())
+
+        if not signals:
+            return jsonify({
+                "success": True,
+                "data": {
+                    "item_id": item.id,
+                    "name": item.name,
+                    "brief": f"No intelligence signals available for {item.name}. Add monitoring sites or wait for feed ingestion.",
+                    "signal_count": 0,
+                }
+            })
+
+        # Build signal summary for the LLM prompt
+        country_name = _COUNTRY_NAMES.get(item.country_code, item.country_code) if item.country_code else "unknown region"
+        signals_text = ""
+        for s in signals:
+            sentiment_label = "neutral"
+            if s.sentiment_score and s.sentiment_score > 0.1:
+                sentiment_label = "positive"
+            elif s.sentiment_score and s.sentiment_score < -0.1:
+                sentiment_label = "negative"
+            signals_text += f"- {s.title} (sentiment: {sentiment_label}, source: {s.source})\n"
+
+        prompt = f"""You are an intelligence analyst. Generate a briefing about "{item.name}" ({item.item_type} in {country_name}).
+
+Recent signals (last 24-48 hours):
+{signals_text}
+
+Provide:
+1. CURRENT SITUATION: What is {item.name} doing right now? (2-3 sentences)
+2. KEY DEVELOPMENTS: Top 3 most important developments
+3. SENTIMENT ANALYSIS: Is media coverage positive, negative, or mixed? What's driving it?
+4. RISK/OPPORTUNITY ASSESSMENT: What should the user watch for?
+5. RECOMMENDED ACTIONS: What should someone monitoring {item.name} do next?"""
+
+        from app.config import Config
+        api_key = Config.LLM_API_KEY
+        base_url = Config.LLM_BASE_URL
+        model = Config.LLM_MODEL_NAME
+
+        resp = http_requests.post(
+            f"{base_url}/chat/completions",
+            json={
+                "model": model,
+                "messages": [
+                    {"role": "system", "content": "You are a senior intelligence analyst writing classified briefings."},
+                    {"role": "user", "content": prompt},
+                ],
+                "temperature": 0.3,
+            },
+            headers={"Authorization": f"Bearer {api_key}"},
+            timeout=30,
+        )
+        resp.raise_for_status()
+        brief = resp.json()["choices"][0]["message"]["content"]
+
+        return jsonify({
+            "success": True,
+            "data": {
+                "item_id": item.id,
+                "name": item.name,
+                "brief": brief,
+                "signal_count": len(signals),
+            }
+        })
+
+    except Exception as e:
+        logger.error("Brief generation failed for watchlist item %s: %s", item_id, e)
+        logger.exception("Watchlist brief error: %s", e)
         return jsonify({"success": False, "error": "An internal error occurred"}), 500
     finally:
         db.close()

@@ -44,6 +44,18 @@
       </div>
     </div>
 
+    <!-- Intelligence Brief -->
+    <div v-if="item.name && !loading" class="brief-section">
+      <button class="brief-btn" @click="generateBrief" :disabled="briefLoading">
+        {{ briefLoading ? 'Generating...' : 'Generate Intelligence Brief' }}
+      </button>
+      <div v-if="briefText" class="brief-card">
+        <div class="brief-header">INTELLIGENCE BRIEF — {{ item.name }}</div>
+        <div class="brief-body" v-html="formatBrief(briefText)"></div>
+        <div class="brief-footer">Generated {{ briefTime }} by OracleFlow AI</div>
+      </div>
+    </div>
+
     <!-- Sentiment Over Time -->
     <div class="section-box" v-if="sentimentData.length > 0">
       <h2 class="section-heading">Sentiment Over Time</h2>
@@ -280,7 +292,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import {
   getWatchlistItem, getWatchlistSignals, getWatchlistSentiment,
-  deleteWatchlistItem, updateWatchlistItem,
+  deleteWatchlistItem, updateWatchlistItem, getWatchlistBrief,
   discoverSite, listAlertRules, updateAlertRule,
 } from '../api/intelligence'
 import { ArrowLeft } from 'lucide-vue-next'
@@ -312,6 +324,46 @@ const newAlertKeyword = ref('')
 const updatingAlert = ref(false)
 const alertError = ref('')
 const alertSuccess = ref('')
+
+// Intelligence brief state
+const briefLoading = ref(false)
+const briefText = ref('')
+const briefTime = ref('')
+
+const generateBrief = async () => {
+  briefLoading.value = true
+  briefText.value = ''
+  briefTime.value = ''
+  try {
+    const res = await getWatchlistBrief(itemId)
+    const d = res.data || res
+    const data = d.data || d
+    briefText.value = data.brief || 'No brief generated.'
+    briefTime.value = new Date().toLocaleString()
+  } catch (e) {
+    briefText.value = 'Failed to generate brief: ' + (e.response?.data?.error || e.message)
+    briefTime.value = new Date().toLocaleString()
+  } finally {
+    briefLoading.value = false
+  }
+}
+
+const formatBrief = (text) => {
+  if (!text) return ''
+  // Convert numbered headings like "1. CURRENT SITUATION:" into styled <h3> tags
+  let html = text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+  // Match patterns like "1. CURRENT SITUATION:" or "2. KEY DEVELOPMENTS:"
+  html = html.replace(
+    /^(\d+)\.\s+([A-Z][A-Z /&]+):/gm,
+    '<h3 class="brief-heading"><span class="brief-heading-num">$1.</span> $2</h3>'
+  )
+  // Convert newlines to <br>
+  html = html.replace(/\n/g, '<br>')
+  return html
+}
 
 const monitoredWebsites = computed(() => {
   const sites = item.value.monitored_sites || []
@@ -1453,5 +1505,85 @@ onMounted(loadData)
   font-size: 0.8rem;
   color: #555;
   font-style: italic;
+}
+
+/* ── Intelligence Brief ── */
+.brief-section {
+  margin-bottom: 28px;
+}
+
+.brief-btn {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8rem;
+  padding: 10px 20px;
+  background: transparent;
+  border: 1px solid #9C27B0;
+  color: #CE93D8;
+  cursor: pointer;
+  transition: all 0.15s;
+  border-radius: 2px;
+  letter-spacing: 0.3px;
+}
+
+.brief-btn:hover:not(:disabled) {
+  background: rgba(156, 39, 176, 0.12);
+  color: #E1BEE7;
+  border-color: #BA68C8;
+}
+
+.brief-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.brief-card {
+  margin-top: 16px;
+  padding: 24px;
+  background: #111;
+  border: 1px solid #2a2a2a;
+  border-left: 4px solid #9C27B0;
+  border-radius: 2px;
+}
+
+.brief-header {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #CE93D8;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #222;
+  font-weight: 600;
+}
+
+.brief-body {
+  font-size: 0.88rem;
+  line-height: 1.7;
+  color: #ccc;
+}
+
+.brief-body :deep(.brief-heading) {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.78rem;
+  letter-spacing: 1px;
+  color: #CE93D8;
+  margin: 18px 0 8px 0;
+  font-weight: 600;
+}
+
+.brief-body :deep(.brief-heading-num) {
+  color: #9C27B0;
+  margin-right: 4px;
+}
+
+.brief-footer {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid #222;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem;
+  color: #555;
+  letter-spacing: 0.5px;
 }
 </style>
