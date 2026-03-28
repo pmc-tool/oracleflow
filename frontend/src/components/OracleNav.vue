@@ -30,10 +30,6 @@
         <span class="nav-icon">&#9728;</span>
         <span>Countries</span>
       </router-link>
-      <router-link to="/intel" class="nav-link" active-class="active">
-        <span class="nav-icon">&#9788;</span>
-        <span>Global Intel</span>
-      </router-link>
     </div>
 
     <div class="nav-divider"></div>
@@ -226,18 +222,17 @@ function handleSignOut() {
   display: flex;
   flex-direction: column;
   gap: 2px;
-  flex: 1;
 }
 
 .nav-link {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 10px 20px;
+  padding: 8px 20px;
   color: #FFFFFF;
   text-decoration: none;
   font-family: 'Space Grotesk', system-ui, sans-serif;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   font-weight: 400;
   transition: background 0.15s;
   border-left: 3px solid transparent;
@@ -273,15 +268,15 @@ function handleSignOut() {
 
 .nav-divider {
   height: 1px;
-  background: #333;
-  margin: 15px 20px;
+  background: #222;
+  margin: 8px 20px;
 }
 
 .nav-section-label {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 0.65rem;
-  color: #666;
-  padding: 8px 20px 4px;
+  font-size: 0.6rem;
+  color: #555;
+  padding: 16px 20px 6px;
   letter-spacing: 2px;
   font-weight: 600;
 }
