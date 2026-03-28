@@ -260,9 +260,13 @@ function handleSignOut() {
 }
 
 .nav-icon {
-  font-size: 1rem;
+  font-size: 0.85rem;
   width: 20px;
-  text-align: center;
+  min-width: 20px;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   line-height: 1;
 }
 
