@@ -10,12 +10,37 @@
 
     <!-- Upload Document mode -->
     <div v-if="simMode === 'upload'" class="upload-mode">
-      <p class="page-desc">Upload a document or paste text. OracleFlow will extract entities, build a knowledge graph, and simulate agent interactions.</p>
-      <div class="upload-redirect">
-        <router-link to="/simulate/advanced" class="upload-link">
-          Open Document Upload Interface &rarr;
-        </router-link>
+      <p class="page-desc">Upload a document or paste text to build a simulation from scratch.</p>
+
+      <!-- Text input -->
+      <div class="upload-section">
+        <label class="upload-label">Scenario Topic</label>
+        <input v-model="uploadTopic" type="text" class="upload-input" placeholder="e.g., Impact of Iran closing Strait of Hormuz" />
       </div>
+
+      <div class="upload-section">
+        <label class="upload-label">Context Document (optional)</label>
+        <div class="upload-dropzone" @click="$refs.uploadFileInput.click()" @dragover.prevent @drop.prevent="onFileDrop">
+          <input ref="uploadFileInput" type="file" hidden accept=".txt,.md,.pdf,.docx" @change="onFileSelect" />
+          <div v-if="!uploadFile">
+            <p>Drop a file here or click to browse</p>
+            <p class="upload-hint">.txt, .md, .pdf, .docx</p>
+          </div>
+          <div v-else class="file-selected">
+            <span>{{ uploadFile.name }}</span>
+            <button @click.stop="uploadFile = null">&times;</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="upload-section" v-if="uploadError">
+        <div class="error-box">{{ uploadError }}</div>
+      </div>
+
+      <button class="run-btn" @click="runUploadSimulation" :disabled="(!uploadTopic.trim() && !uploadFile) || uploadLoading">
+        <span v-if="uploadLoading">Initializing...</span>
+        <span v-else>Start Simulation &rarr;</span>
+      </button>
     </div>
 
     <!-- Signals mode -->
@@ -265,6 +290,56 @@ const router = useRouter()
 const route = useRoute()
 
 const simMode = ref('signals')
+
+// Upload tab state
+const uploadTopic = ref('')
+const uploadFile = ref(null)
+const uploadLoading = ref(false)
+const uploadError = ref('')
+const uploadFileInput = ref(null)
+
+function onFileSelect(event) {
+  const file = event.target.files[0]
+  if (file) uploadFile.value = file
+}
+
+function onFileDrop(event) {
+  const file = event.dataTransfer.files[0]
+  if (file) uploadFile.value = file
+}
+
+async function runUploadSimulation() {
+  if ((!uploadTopic.value.trim() && !uploadFile.value) || uploadLoading.value) return
+  uploadLoading.value = true
+  uploadError.value = ''
+
+  try {
+    const formData = new FormData()
+
+    if (uploadFile.value) {
+      formData.append('files', uploadFile.value, uploadFile.value.name)
+    } else {
+      // Create a text blob from the topic as the document
+      const blob = new Blob([`# Simulation Scenario\n\n${uploadTopic.value.trim()}`], { type: 'text/markdown' })
+      formData.append('files', blob, 'scenario.md')
+    }
+
+    formData.append('simulation_requirement', uploadTopic.value.trim() || 'Analyze this document and predict outcomes')
+    formData.append('project_name', `OracleFlow Sim ${new Date().toISOString().slice(0, 16)}`)
+
+    const ontRes = await generateOntology(formData)
+    const projectId = ontRes.data?.project_id
+    if (!projectId) throw new Error('Failed to create project')
+
+    router.push({ name: 'Process', params: { projectId } })
+  } catch (e) {
+    uploadError.value = e.message || 'Upload failed'
+    console.error('Upload simulation error:', e)
+  } finally {
+    uploadLoading.value = false
+  }
+}
+
 const PAGE_SIZE = 20
 const MAX_SELECTION = 30
 
@@ -665,26 +740,81 @@ onUnmounted(() => {
   padding: 40px 0;
 }
 
-.upload-redirect {
-  margin-top: 24px;
+.upload-section {
+  margin-bottom: 20px;
 }
 
-.upload-link {
-  display: inline-block;
-  padding: 14px 28px;
-  background: #141414;
+.upload-label {
+  display: block;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 8px;
+}
+
+.upload-input {
+  width: 100%;
+  background: #111;
   border: 1px solid #333;
-  color: #e8e8e8;
+  padding: 12px;
+  color: #fff;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.9rem;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.upload-input:focus {
+  border-color: #FF4500;
+}
+
+.upload-input::placeholder {
+  color: #555;
+}
+
+.upload-dropzone {
+  border: 1px dashed #444;
+  padding: 40px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.15s;
+  color: #888;
+  font-size: 0.9rem;
+}
+
+.upload-dropzone:hover {
+  border-color: #FF4500;
+}
+
+.upload-hint {
+  font-size: 0.7rem;
+  color: #666;
+  margin-top: 6px;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.file-selected {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   font-family: 'JetBrains Mono', monospace;
   font-size: 0.85rem;
-  font-weight: 600;
-  text-decoration: none;
-  transition: border-color 0.15s, background 0.15s;
+  color: #e8e8e8;
 }
 
-.upload-link:hover {
-  border-color: #FF4500;
-  background: #1a1a1a;
+.file-selected button {
+  background: none;
+  border: none;
+  color: #999;
+  font-size: 1.4rem;
+  cursor: pointer;
+  padding: 0 4px;
+}
+
+.file-selected button:hover {
+  color: #EF4444;
 }
 
 .page-title {

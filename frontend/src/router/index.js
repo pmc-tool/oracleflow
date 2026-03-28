@@ -1,8 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import LandingView from '../views/LandingView.vue'
-import Home from '../views/Home.vue'
 import Process from '../views/MainView.vue'
-import SimulationView from '../views/SimulationView.vue'
 import SimulationRunView from '../views/SimulationRunView.vue'
 import ReportView from '../views/ReportView.vue'
 import InteractionView from '../views/InteractionView.vue'
@@ -54,21 +52,9 @@ const routes = [
     component: NewSimulationView
   },
   {
-    path: '/simulate/advanced',
-    name: 'AdvancedSimulation',
-    component: Home,
-    meta: { title: 'Advanced Simulation' }
-  },
-  {
     path: '/process/:projectId',
     name: 'Process',
     component: Process,
-    props: true
-  },
-  {
-    path: '/simulation/:simulationId',
-    name: 'Simulation',
-    component: SimulationView,
     props: true
   },
   {
