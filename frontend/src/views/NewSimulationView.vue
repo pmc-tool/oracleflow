@@ -1,11 +1,11 @@
 <template>
   <div class="new-sim">
-    <h1 class="page-title">New Simulation</h1>
+    <h1 class="page-title">Predict What Happens Next</h1>
 
     <!-- Mode tabs -->
     <div class="sim-tabs">
-      <button class="sim-tab" :class="{ active: simMode === 'signals' }" @click="simMode = 'signals'">From Signals</button>
-      <button class="sim-tab" :class="{ active: simMode === 'upload' }" @click="simMode = 'upload'">Upload Document</button>
+      <button class="sim-tab" :class="{ active: simMode === 'signals' }" @click="simMode = 'signals'">Describe &amp; Predict</button>
+      <button class="sim-tab" :class="{ active: simMode === 'upload' }" @click="simMode = 'upload'">Upload a Document</button>
     </div>
 
     <!-- Upload Document mode -->
@@ -45,7 +45,7 @@
 
     <!-- Signals mode -->
     <template v-if="simMode === 'signals'">
-    <p class="page-desc">Select intelligence signals and describe a scenario. OracleFlow will build a simulation document, generate AI agents, and predict outcomes.</p>
+    <p class="page-desc">Describe a scenario or pick recent events. OracleFlow AI will simulate reactions and predict outcomes.</p>
 
     <!-- Signal pre-fill banner -->
     <div v-if="signalBannerTitle" class="signal-prefill-banner">
@@ -57,8 +57,8 @@
     <div class="section">
       <div class="section-header">
         <span class="step-num">01</span>
-        <span class="step-label">Select Signals</span>
-        <span class="step-hint">Choose signals to include as context for the simulation</span>
+        <span class="step-label">Choose Recent Events (Optional)</span>
+        <span class="step-hint">Pick events to include as context — or skip and just describe your scenario</span>
       </div>
 
       <!-- Filter controls -->
@@ -68,40 +68,20 @@
             v-model="searchQuery"
             type="text"
             class="filter-input search-input"
-            placeholder="Search signals by keyword..."
+            placeholder="Search recent events..."
             @input="onSearchInput"
           />
           <select v-model="filterCategory" class="filter-input filter-select" @change="resetAndFetch">
             <option value="">All categories</option>
-            <option value="finance">Finance</option>
+            <option value="finance">Finance &amp; Economy</option>
             <option value="geopolitical">Geopolitical</option>
             <option value="supply_chain">Supply Chain</option>
-            <option value="cyber">Cyber</option>
+            <option value="cyber">Cyber &amp; Technology</option>
             <option value="climate">Climate</option>
             <option value="politics">Politics</option>
             <option value="healthcare">Healthcare</option>
-            <option value="economy">Economy</option>
-            <option value="crime">Crime</option>
-            <option value="education">Education</option>
-            <option value="technology">Technology</option>
-            <option value="other">Other</option>
+            <option value="crime">Crime &amp; Security</option>
           </select>
-          <select v-model="filterThreat" class="filter-input filter-select" @change="resetAndFetch">
-            <option value="">All threat levels</option>
-            <option value="0.7">High threat only (&gt;70%)</option>
-            <option value="0.6">Elevated+ (&gt;60%)</option>
-          </select>
-          <select v-model="filterDateRange" class="filter-input filter-select" @change="resetAndFetch">
-            <option value="">All time</option>
-            <option value="24h">Last 24h</option>
-            <option value="7d">Last 7 days</option>
-            <option value="30d">Last 30 days</option>
-          </select>
-        </div>
-        <div class="filter-actions">
-          <button class="quick-filter-btn" :class="{ active: topThreatsActive }" @click="toggleTopThreats">
-            Top Threats
-          </button>
         </div>
       </div>
 
@@ -128,7 +108,7 @@
               <div class="signal-top">
                 <span class="signal-title">{{ sig.title }}</span>
                 <span class="anomaly-badge" :style="{ background: anomalyColor(sig.anomaly_score) }">
-                  {{ (sig.anomaly_score * 100).toFixed(0) }}%
+                  ALERT {{ (sig.anomaly_score * 100).toFixed(0) }}%
                 </span>
               </div>
               <div class="signal-meta">
@@ -170,10 +150,8 @@
             <div class="signal-meta">
               <span class="meta-badge source">{{ sig.source }}</span>
               <span class="meta-badge category">{{ sig.category?.replace(/_/g, ' ') }}</span>
-              <span class="meta-country" v-if="sig.country_code">{{ sig.country_code }}</span>
               <span class="meta-time">{{ formatTime(sig.timestamp) }}</span>
             </div>
-            <div class="signal-summary" v-if="sig.summary">{{ sig.summary }}</div>
           </div>
         </label>
       </div>
@@ -190,12 +168,11 @@
       </div>
     </div>
 
-    <!-- Step 2: Scenario Prompt -->
+    <!-- Step 2: Describe & Configure -->
     <div class="section">
       <div class="section-header">
         <span class="step-num">02</span>
-        <span class="step-label">Scenario Prompt</span>
-        <span class="step-hint">Describe what you want to predict</span>
+        <span class="step-label">What do you want to predict?</span>
       </div>
 
       <textarea
@@ -205,34 +182,31 @@
         rows="6"
         @input="onScenarioInput"
       ></textarea>
-    </div>
 
-    <!-- Step 3: Configuration -->
-    <div class="section">
-      <div class="section-header">
-        <span class="step-num">03</span>
-        <span class="step-label">Configuration</span>
-      </div>
-
-      <div class="config-row">
-        <div class="config-item">
-          <label>Platform</label>
-          <select v-model="platform" class="config-select">
-            <option value="twitter">Twitter (short-form debate)</option>
-            <option value="reddit">Reddit (long-form discussion)</option>
-          </select>
+      <details class="advanced-toggle">
+        <summary class="advanced-label">Advanced Settings</summary>
+        <div class="advanced-content">
+          <div class="config-row">
+            <div class="config-item">
+              <label>Platform</label>
+              <select v-model="platform" class="config-select">
+                <option value="twitter">Twitter (short-form debate)</option>
+                <option value="reddit">Reddit (long-form discussion)</option>
+              </select>
+            </div>
+            <div class="config-item">
+              <label>Rounds</label>
+              <select v-model="rounds" class="config-select">
+                <option :value="1">1 round (quick test)</option>
+                <option :value="3">3 rounds (fast)</option>
+                <option :value="5">5 rounds (standard)</option>
+                <option :value="10">10 rounds (balanced)</option>
+                <option :value="20">20 rounds (deep)</option>
+              </select>
+            </div>
+          </div>
         </div>
-        <div class="config-item">
-          <label>Rounds</label>
-          <select v-model="rounds" class="config-select">
-            <option :value="1">1 round (quick test)</option>
-            <option :value="3">3 rounds (fast)</option>
-            <option :value="5">5 rounds (standard)</option>
-            <option :value="10">10 rounds (balanced)</option>
-            <option :value="20">20 rounds (deep)</option>
-          </select>
-        </div>
-      </div>
+      </details>
     </div>
 
     <!-- Status / Progress -->
@@ -248,7 +222,7 @@
       <!-- Progress steps -->
       <div class="progress-steps" v-if="running">
         <div v-for="(step, i) in progressSteps" :key="i" class="progress-step" :class="{ done: step.done, active: step.active }">
-          <span class="progress-dot"></span>
+          <span class="progress-dot">{{ step.done ? '\u2713' : step.active ? '\u25CF' : '\u25CB' }}</span>
           <span>{{ step.label }}</span>
         </div>
       </div>
@@ -271,8 +245,8 @@
       @click="runSimulation"
       :disabled="running || (selectedIds.size === 0 && !scenario.trim())"
     >
-      <span v-if="running">Simulation Running...</span>
-      <span v-else>Run Simulation &rarr;</span>
+      <span v-if="running">Prediction Running...</span>
+      <span v-else>Run Prediction &rarr;</span>
     </button>
     </template>
   </div>
@@ -364,9 +338,6 @@ const suggestedSignals = ref([])
 // Filter state
 const searchQuery = ref('')
 const filterCategory = ref('')
-const filterThreat = ref('')
-const filterDateRange = ref('')
-const topThreatsActive = ref(false)
 const currentOffset = ref(0)
 
 // Debounce timers
@@ -376,10 +347,9 @@ let scenarioTimer = null
 const hasMore = computed(() => signals.value.length < signalTotal.value)
 
 const progressSteps = ref([
-  { label: 'Building knowledge graph...', done: false, active: false },
-  { label: 'Generating agent personas...', done: false, active: false },
-  { label: 'Running simulation...', done: false, active: false },
-  { label: 'Generating report...', done: false, active: false },
+  { label: 'Analyzing your scenario', done: false, active: false },
+  { label: 'Creating debate participants', done: false, active: false },
+  { label: 'Running prediction', done: false, active: false },
 ])
 
 // Category-to-agent mapping for auto-selection
@@ -396,12 +366,9 @@ const CATEGORY_AGENT_MAP = {
 
 // Build query params from current filter state
 function buildParams(offset = 0, limit = PAGE_SIZE) {
-  const params = { limit, offset }
+  const params = { limit, offset, since: '30d' }
   if (searchQuery.value.trim()) params.search = searchQuery.value.trim()
   if (filterCategory.value) params.category = filterCategory.value
-  if (filterDateRange.value) params.since = filterDateRange.value
-  if (filterThreat.value) params.min_anomaly_score = parseFloat(filterThreat.value)
-  else if (topThreatsActive.value) params.min_anomaly_score = 0.7
   return params
 }
 
@@ -449,14 +416,6 @@ function onSearchInput() {
   searchTimer = setTimeout(() => {
     resetAndFetch()
   }, 300)
-}
-
-// Top threats quick-filter toggle
-function toggleTopThreats() {
-  topThreatsActive.value = !topThreatsActive.value
-  // Clear the dropdown threat filter when using quick-filter
-  if (topThreatsActive.value) filterThreat.value = ''
-  resetAndFetch()
 }
 
 // Auto-suggest signals from scenario text (2s debounce)
@@ -921,34 +880,6 @@ onUnmounted(() => {
   min-width: 130px;
 }
 
-.filter-actions {
-  display: flex;
-  gap: 8px;
-}
-
-.quick-filter-btn {
-  background: #1a1a1a;
-  border: 1px solid #444;
-  color: #ccc;
-  padding: 6px 14px;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 0.75rem;
-  cursor: pointer;
-  transition: all 0.15s;
-}
-
-.quick-filter-btn:hover {
-  border-color: #FF4500;
-  color: #FF4500;
-}
-
-.quick-filter-btn.active {
-  background: rgba(255, 69, 0, 0.15);
-  border-color: #FF4500;
-  color: #FF4500;
-  font-weight: 600;
-}
-
 /* -- Selection bar -- */
 .selection-bar {
   display: flex;
@@ -1039,9 +970,9 @@ onUnmounted(() => {
 
 .signal-item {
   display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  padding: 12px 15px;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
   border: 1px solid #333;
   cursor: pointer;
   transition: all 0.15s;
@@ -1075,7 +1006,7 @@ onUnmounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 6px;
+  margin-bottom: 3px;
 }
 
 .signal-title {
@@ -1096,7 +1027,7 @@ onUnmounted(() => {
   gap: 8px;
   align-items: center;
   flex-wrap: wrap;
-  margin-bottom: 4px;
+  margin-bottom: 0;
 }
 
 .meta-badge {
@@ -1108,14 +1039,7 @@ onUnmounted(() => {
 }
 
 .meta-badge.source { color: #FF4500; border-color: #FF4500; }
-.meta-country { font-size: 0.75rem; color: #888; }
 .meta-time { font-size: 0.75rem; color: #666; }
-
-.signal-summary {
-  font-size: 0.8rem;
-  color: #888;
-  line-height: 1.4;
-}
 
 /* -- Load more -- */
 .load-more-bar {
@@ -1205,6 +1129,46 @@ onUnmounted(() => {
   border-color: #FF4500;
 }
 
+/* -- Advanced toggle -- */
+.advanced-toggle {
+  margin-top: 16px;
+  border: 1px solid #333;
+}
+
+.advanced-label {
+  display: block;
+  padding: 12px 16px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8rem;
+  color: #888;
+  cursor: pointer;
+  user-select: none;
+  list-style: none;
+  transition: color 0.15s;
+}
+
+.advanced-label:hover {
+  color: #FF4500;
+}
+
+.advanced-label::-webkit-details-marker {
+  display: none;
+}
+
+.advanced-label::before {
+  content: '\25B6  ';
+  font-size: 0.65rem;
+}
+
+.advanced-toggle[open] .advanced-label::before {
+  content: '\25BC  ';
+}
+
+.advanced-content {
+  padding: 16px;
+  border-top: 1px solid #333;
+}
+
 .status-box {
   display: flex;
   align-items: center;
@@ -1254,14 +1218,13 @@ onUnmounted(() => {
 .progress-step.active { color: #FF4500; font-weight: 600; }
 
 .progress-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: #333;
+  width: 16px;
+  text-align: center;
+  font-size: 0.85rem;
 }
 
-.progress-step.done .progress-dot { background: #22C55E; }
-.progress-step.active .progress-dot { background: #FF4500; animation: pulse 1.5s infinite; }
+.progress-step.done .progress-dot { color: #22C55E; }
+.progress-step.active .progress-dot { color: #FF4500; animation: pulse 1.5s infinite; }
 
 @keyframes pulse {
   0%, 100% { opacity: 1; }
