@@ -89,6 +89,7 @@ def create_app(config_class=Config):
     from .oracleflow.api import (
         sites_bp, signals_bp, chaos_bp,
         entities_bp, countries_bp, alerts_bp,
+        watchlist_bp,
     )
     app.register_blueprint(sites_bp, url_prefix='/api/sites')
     app.register_blueprint(signals_bp, url_prefix='/api/signals')
@@ -108,6 +109,7 @@ def create_app(config_class=Config):
     app.register_blueprint(entities_bp, url_prefix='/api/entities')
     app.register_blueprint(countries_bp, url_prefix='/api/countries')
     app.register_blueprint(alerts_bp, url_prefix='/api/alerts')
+    app.register_blueprint(watchlist_bp, url_prefix='/api/watchlist')
 
     # OracleFlow Auth Blueprint
     from .oracleflow.auth import auth_bp

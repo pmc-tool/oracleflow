@@ -9,5 +9,6 @@ entities_bp = Blueprint('of_entities', __name__)
 countries_bp = Blueprint('of_countries', __name__)
 alerts_bp = Blueprint('of_alerts', __name__)
 feeds_bp = Blueprint('of_feeds', __name__)
+watchlist_bp = Blueprint('of_watchlist', __name__)
 
-from . import sites, signals, chaos, entities, countries, alerts  # noqa: E402, F401
+from . import sites, signals, chaos, entities, countries, alerts, watchlist  # noqa: E402, F401

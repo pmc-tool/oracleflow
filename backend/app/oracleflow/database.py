@@ -70,7 +70,7 @@ def init_db(app):
     _engine = create_engine(db_url, echo=app.config.get('DEBUG', False), **pool_args)
     _session_factory = scoped_session(sessionmaker(bind=_engine))
     # Import all models so tables are registered
-    from app.oracleflow.models import signal, site, entity
+    from app.oracleflow.models import signal, site, entity, watchlist
     from app.oracleflow.auth import models as auth_models  # noqa: F841
     Base.metadata.create_all(_engine)
     _migrate_add_columns(_engine)

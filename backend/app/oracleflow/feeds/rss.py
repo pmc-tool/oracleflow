@@ -645,6 +645,105 @@ def reprocess_country_codes(db: Session) -> int:
     return updated
 
 
+def fetch_watchlist_feeds(db: Session, max_per_feed: int = 10) -> list[Signal]:
+    """Fetch Google News RSS for all active watchlist items and create signals.
+
+    For each active WatchlistItem that has a google_news_rss URL, parse the
+    feed, dedup, extract entities/sentiment, and store signals with a
+    reference back to the watchlist item in raw_data_json.
+    """
+    from app.oracleflow.models.watchlist import WatchlistItem
+
+    stmt = (
+        select(WatchlistItem)
+        .where(
+            WatchlistItem.is_active == 1,
+            WatchlistItem.google_news_rss.isnot(None),
+            WatchlistItem.google_news_rss != "",
+        )
+    )
+    items = list(db.execute(stmt).scalars().all())
+
+    if not items:
+        return []
+
+    signals = []
+    errors = 0
+
+    for item in items:
+        try:
+            feed = feedparser.parse(item.google_news_rss)
+            if not feed.entries:
+                continue
+
+            source_name = f"Watchlist: {item.name}"
+
+            for entry in feed.entries[:max_per_feed]:
+                title = re.sub(r'<[^>]+>', '', (entry.get("title") or ""))[:200].strip()
+                if not title:
+                    continue
+
+                if _is_duplicate(db, title):
+                    continue
+
+                summary = (entry.get("summary") or "")[:500]
+                summary = re.sub(r'<[^>]+>', '', summary).strip()
+
+                from app.oracleflow.entities.signal_extractor import extract_entities
+                entities = extract_entities(title, summary)
+
+                raw_data = {
+                    "url": entry.get("link", ""),
+                    "feed": item.google_news_rss,
+                    "source_name": source_name,
+                    "published": entry.get("published", entry.get("updated", "")),
+                    "watchlist_item_id": item.id,
+                    "watchlist_item_name": item.name,
+                    "watchlist_item_type": item.item_type,
+                }
+                if entities:
+                    raw_data["entities"] = entities
+
+                _category = _guess_category(title + " " + summary)
+                _anomaly = _estimate_anomaly(title + " " + summary, source_name=source_name)
+                _entity_count = (
+                    sum(len(v) if isinstance(v, list) else 0 for v in entities.values())
+                    if entities else 0
+                )
+
+                signal = Signal(
+                    source="rss",
+                    signal_type="news_article",
+                    category=_category,
+                    country_code=item.country_code or _guess_country(title + " " + summary),
+                    title=title,
+                    summary=summary[:400],
+                    raw_data_json=raw_data,
+                    sentiment_score=_estimate_sentiment(title, summary),
+                    anomaly_score=_anomaly,
+                    importance=_importance_for_source(
+                        source_name, title,
+                        anomaly_score=_anomaly,
+                        entity_count=_entity_count,
+                        signal_age_hours=0.0,
+                    ),
+                    timestamp=datetime.now(timezone.utc),
+                )
+                db.add(signal)
+                signals.append(signal)
+
+        except Exception as e:
+            errors += 1
+            logger.debug(f"Watchlist feed failed [{item.name}]: {e}")
+            continue
+
+    db.flush()
+    logger.info(
+        f"Watchlist feeds: {len(signals)} new signals from {len(items)} items ({errors} errors)"
+    )
+    return signals
+
+
 def _guess_category(text: str) -> str:
     """Simple keyword-based category detection."""
     text_lower = text.lower()

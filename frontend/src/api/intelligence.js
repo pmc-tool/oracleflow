@@ -47,6 +47,15 @@ export const getSitePages = (siteId) => service.get(`/api/sites/${siteId}/pages`
 export const getPageDiffs = (siteId, pageId) => service.get(`/api/sites/${siteId}/pages/${pageId}/diffs`)
 export const getDiffDetail = (siteId, pageId, diffId) => service.get(`/api/sites/${siteId}/pages/${pageId}/diffs/${diffId}`)
 
+// Watchlist
+export const getWatchlist = () => service.get('/api/watchlist/')
+export const createWatchlistItem = (data) => service.post('/api/watchlist/', data)
+export const getWatchlistItem = (id) => service.get(`/api/watchlist/${id}`)
+export const getWatchlistSignals = (id, params = {}) => service.get(`/api/watchlist/${id}/signals`, { params })
+export const getWatchlistSentiment = (id) => service.get(`/api/watchlist/${id}/sentiment`)
+export const getWatchlistCompare = () => service.get('/api/watchlist/compare')
+export const deleteWatchlistItem = (id) => service.delete(`/api/watchlist/${id}`)
+
 // User Preferences
 export const getUserPreferences = () => service.get('/api/auth/preferences')
 export const updateUserPreferences = (data) => service.put('/api/auth/preferences', data)

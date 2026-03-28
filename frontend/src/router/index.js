@@ -13,6 +13,8 @@ import EntityDetailView from '../views/EntityDetailView.vue'
 import CountriesView from '../views/CountriesView.vue'
 import CountryDetailView from '../views/CountryDetailView.vue'
 import IntelView from '../views/IntelView.vue'
+import WatchlistView from '../views/WatchlistView.vue'
+import WatchlistDetailView from '../views/WatchlistDetailView.vue'
 import LoginView from '../views/LoginView.vue'
 import RegisterView from '../views/RegisterView.vue'
 import TermsView from '../views/TermsView.vue'
@@ -76,8 +78,19 @@ const routes = [
     props: true
   },
   {
+    path: '/watchlist',
+    name: 'Watchlist',
+    component: WatchlistView
+  },
+  {
+    path: '/watchlist/:id',
+    name: 'WatchlistDetail',
+    component: WatchlistDetailView,
+    props: true
+  },
+  {
     path: '/dashboard',
-    redirect: '/intel'
+    redirect: '/watchlist'
   },
   {
     path: '/sites',
@@ -170,11 +183,11 @@ router.beforeEach((to, from, next) => {
   if (!PUBLIC_ROUTES.includes(to.name) && !token) {
     next({ name: 'Login' })
   } else if (to.name === 'Login' && token) {
-    next({ path: '/intel' })
+    next({ path: '/watchlist' })
   } else if (to.path.startsWith('/admin') && token) {
     const role = getUserRoleFromToken(token) || localStorage.getItem('of_user_role')
     if (role !== 'admin') {
-      next({ path: '/intel' })
+      next({ path: '/watchlist' })
     } else {
       next()
     }

@@ -8,11 +8,25 @@
       </button>
     </div>
 
+    <div class="nav-section-label">WATCHLIST</div>
+    <div class="nav-links">
+      <router-link to="/watchlist" class="nav-link" active-class="active">
+        <Eye :size="18" class="nav-icon" />
+        <span>My Watchlist</span>
+      </router-link>
+      <router-link to="/watchlist" class="nav-link nav-sub-link" active-class="active" @click.prevent="scrollToAddForm">
+        <PlusCircle :size="16" class="nav-icon" />
+        <span>Add New</span>
+      </router-link>
+    </div>
+
+    <div class="nav-divider"></div>
+
     <div class="nav-section-label">INTELLIGENCE</div>
     <div class="nav-links">
       <router-link to="/intel" class="nav-link" active-class="active">
         <LayoutDashboard :size="18" class="nav-icon" />
-        <span>Dashboard</span>
+        <span>Global Intel</span>
       </router-link>
       <router-link to="/sites" class="nav-link" active-class="active">
         <Monitor :size="18" class="nav-icon" />
@@ -74,7 +88,8 @@ import { getUnreadCount } from '../api/intelligence'
 import NotificationPanel from './NotificationPanel.vue'
 import {
   LayoutDashboard, Monitor, Radio, Users, Globe,
-  FlaskConical, Plus, Settings, Bell, Upload
+  FlaskConical, Plus, Settings, Bell, Upload,
+  Eye, PlusCircle
 } from 'lucide-vue-next'
 
 const router = useRouter()
@@ -144,6 +159,13 @@ onBeforeUnmount(() => {
     evtSource = null
   }
 })
+
+function scrollToAddForm() {
+  router.push('/watchlist').then(() => {
+    // Emit or trigger the add form on the watchlist page
+    window.dispatchEvent(new CustomEvent('watchlist-add-new'))
+  })
+}
 
 function handleSignOut() {
   localStorage.removeItem('of_token')
