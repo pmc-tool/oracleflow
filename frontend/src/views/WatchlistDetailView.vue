@@ -44,6 +44,24 @@
       </div>
     </div>
 
+    <!-- Sentiment Over Time -->
+    <div class="section-box" v-if="sentimentData.length > 0">
+      <h2 class="section-heading">Sentiment Over Time</h2>
+      <div class="sentiment-chart">
+        <div v-for="day in sentimentData" :key="day.date" class="sentiment-row">
+          <span class="sentiment-date">{{ formatShortDate(day.date) }}</span>
+          <div class="sentiment-bar-track">
+            <div class="sentiment-bar-neg" :style="{ width: negWidth(day.avg_sentiment) + '%' }"></div>
+            <div class="sentiment-bar-pos" :style="{ width: posWidth(day.avg_sentiment) + '%' }"></div>
+          </div>
+          <span class="sentiment-value" :style="{ color: day.avg_sentiment >= 0 ? '#22c55e' : '#ef4444' }">
+            {{ day.avg_sentiment > 0 ? '+' : '' }}{{ day.avg_sentiment.toFixed(2) }}
+          </span>
+          <span class="sentiment-count">{{ day.signal_count }} signals</span>
+        </div>
+      </div>
+    </div>
+
     <!-- Loading -->
     <div v-if="loading" class="loading-text">Loading details...</div>
 
@@ -177,7 +195,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { getWatchlistItem, getWatchlistSignals, deleteWatchlistItem } from '../api/intelligence'
+import { getWatchlistItem, getWatchlistSignals, getWatchlistSentiment, deleteWatchlistItem } from '../api/intelligence'
 import { ArrowLeft } from 'lucide-vue-next'
 
 const props = defineProps({
@@ -191,6 +209,7 @@ const loading = ref(true)
 const error = ref('')
 const item = ref({})
 const signals = ref([])
+const sentimentData = ref([])
 const expandedId = ref(null)
 
 const itemId = props.id || route.params.id
@@ -280,6 +299,15 @@ const trendTextClass = (item) => {
   return 'trend-flat'
 }
 
+const formatShortDate = (dateStr) => {
+  if (!dateStr) return '--'
+  const d = new Date(dateStr)
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+}
+
+const negWidth = (val) => val < 0 ? Math.abs(val) * 50 : 0
+const posWidth = (val) => val > 0 ? val * 50 : 0
+
 const goToSimulation = (sig) => {
   router.push({
     path: '/simulate',
@@ -324,14 +352,17 @@ const loadData = async () => {
   loading.value = true
   error.value = ''
   try {
-    const [itemRes, signalsRes] = await Promise.all([
+    const [itemRes, signalsRes, sentimentRes] = await Promise.all([
       getWatchlistItem(itemId),
       getWatchlistSignals(itemId, { limit: 20 }),
+      getWatchlistSentiment(itemId).catch(() => ({ data: [] })),
     ])
     const d = itemRes.data || itemRes
     item.value = d
     const s = signalsRes.data || signalsRes
     signals.value = Array.isArray(s) ? s : (s.items || s.results || [])
+    const sd = sentimentRes.data || sentimentRes
+    sentimentData.value = Array.isArray(sd) ? sd : (sd.data || [])
   } catch (e) {
     error.value = 'Failed to load watchlist item: ' + (e.response?.data?.error || e.message)
   } finally {
@@ -474,6 +505,104 @@ onMounted(loadData)
 .trend-up { color: #F44336; }
 .trend-down { color: #4CAF50; }
 .trend-flat { color: #666; }
+
+/* ── Sentiment Over Time ── */
+.section-box {
+  margin-bottom: 28px;
+  padding: 20px;
+  background: #141414;
+  border: 1px solid #222;
+  border-radius: 2px;
+}
+
+.section-heading {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #666;
+  margin: 0 0 16px 0;
+  font-weight: 400;
+}
+
+.sentiment-chart {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sentiment-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.sentiment-date {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.72rem;
+  color: #888;
+  min-width: 56px;
+  text-align: right;
+}
+
+.sentiment-bar-track {
+  flex: 1;
+  max-width: 400px;
+  height: 14px;
+  background: #1a1a1a;
+  border: 1px solid #2a2a2a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  border-radius: 1px;
+}
+
+.sentiment-bar-neg {
+  position: absolute;
+  right: 50%;
+  height: 100%;
+  background: #ef4444;
+  opacity: 0.7;
+  transition: width 0.4s ease;
+  border-radius: 1px 0 0 1px;
+}
+
+.sentiment-bar-pos {
+  position: absolute;
+  left: 50%;
+  height: 100%;
+  background: #22c55e;
+  opacity: 0.7;
+  transition: width 0.4s ease;
+  border-radius: 0 1px 1px 0;
+}
+
+.sentiment-bar-track::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: #444;
+  z-index: 1;
+}
+
+.sentiment-value {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  min-width: 48px;
+  text-align: right;
+}
+
+.sentiment-count {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem;
+  color: #555;
+  min-width: 70px;
+}
 
 /* ── Badges ── */
 .badge {

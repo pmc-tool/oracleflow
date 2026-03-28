@@ -34,6 +34,73 @@ _COUNTRY_NAMES = {
 
 VALID_ITEM_TYPES = {"organization", "person", "topic", "competitor", "location"}
 
+COUNTRY_FEED_SUGGESTIONS = {
+    'BD': [
+        {'name': 'bdnews24.com', 'url': 'https://bdnews24.com'},
+        {'name': 'The Daily Star', 'url': 'https://www.thedailystar.net'},
+        {'name': 'Prothom Alo', 'url': 'https://en.prothomalo.com'},
+        {'name': 'Dhaka Tribune', 'url': 'https://www.dhakatribune.com'},
+    ],
+    'US': [
+        {'name': 'Washington Post', 'url': 'https://www.washingtonpost.com'},
+        {'name': 'Politico', 'url': 'https://www.politico.com'},
+        {'name': 'Reuters', 'url': 'https://www.reuters.com'},
+    ],
+    'IN': [
+        {'name': 'NDTV', 'url': 'https://www.ndtv.com'},
+        {'name': 'The Hindu', 'url': 'https://www.thehindu.com'},
+        {'name': 'Times of India', 'url': 'https://timesofindia.indiatimes.com'},
+    ],
+    'GB': [
+        {'name': 'BBC News', 'url': 'https://www.bbc.co.uk/news'},
+        {'name': 'The Guardian', 'url': 'https://www.theguardian.com'},
+    ],
+    'CN': [
+        {'name': 'South China Morning Post', 'url': 'https://www.scmp.com'},
+        {'name': 'Caixin Global', 'url': 'https://www.caixinglobal.com'},
+    ],
+    'RU': [
+        {'name': 'Moscow Times', 'url': 'https://www.themoscowtimes.com'},
+        {'name': 'TASS', 'url': 'https://tass.com'},
+    ],
+    'DE': [
+        {'name': 'Deutsche Welle', 'url': 'https://www.dw.com'},
+        {'name': 'Der Spiegel', 'url': 'https://www.spiegel.de/international'},
+    ],
+    'FR': [
+        {'name': 'France 24', 'url': 'https://www.france24.com/en'},
+        {'name': 'Le Monde', 'url': 'https://www.lemonde.fr/en'},
+    ],
+    'JP': [
+        {'name': 'Japan Times', 'url': 'https://www.japantimes.co.jp'},
+        {'name': 'NHK World', 'url': 'https://www3.nhk.or.jp/nhkworld'},
+    ],
+    'BR': [
+        {'name': 'Folha de S.Paulo', 'url': 'https://www1.folha.uol.com.br/internacional/en'},
+        {'name': 'Brasil Wire', 'url': 'https://www.brasilwire.com'},
+    ],
+    'PK': [
+        {'name': 'Dawn', 'url': 'https://www.dawn.com'},
+        {'name': 'Geo News', 'url': 'https://www.geo.tv'},
+    ],
+    'NG': [
+        {'name': 'Punch Nigeria', 'url': 'https://punchng.com'},
+        {'name': 'Premium Times', 'url': 'https://www.premiumtimesng.com'},
+    ],
+    'AU': [
+        {'name': 'ABC News Australia', 'url': 'https://www.abc.net.au/news'},
+        {'name': 'Sydney Morning Herald', 'url': 'https://www.smh.com.au'},
+    ],
+    'TR': [
+        {'name': 'Daily Sabah', 'url': 'https://www.dailysabah.com'},
+        {'name': 'Hurriyet Daily News', 'url': 'https://www.hurriyetdailynews.com'},
+    ],
+    'SA': [
+        {'name': 'Arab News', 'url': 'https://www.arabnews.com'},
+        {'name': 'Saudi Gazette', 'url': 'https://saudigazette.com.sa'},
+    ],
+}
+
 
 def _get_db():
     return get_session()
@@ -168,7 +235,10 @@ def create_watchlist_item():
         db.add(alert_rule)
         db.commit()
 
-        return jsonify({"success": True, "data": _serialize_item(item)}), 201
+        response_data = {"success": True, "data": _serialize_item(item)}
+        if country_code and country_code in COUNTRY_FEED_SUGGESTIONS:
+            response_data["suggested_sites"] = COUNTRY_FEED_SUGGESTIONS[country_code]
+        return jsonify(response_data), 201
 
     except Exception as e:
         db.rollback()

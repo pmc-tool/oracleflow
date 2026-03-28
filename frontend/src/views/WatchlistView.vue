@@ -126,18 +126,19 @@
     </div>
 
     <!-- Quick Comparison -->
-    <div v-if="!loading && items.length > 1" class="comparison-section">
-      <div class="comparison-title">Quick Comparison</div>
-      <div class="comparison-bars">
-        <div v-for="item in sortedBySignals" :key="'cmp-' + item.id" class="comparison-row">
-          <span class="comparison-name">{{ truncate(item.name, 16) }}</span>
-          <div class="comparison-bar-track">
-            <div
-              class="comparison-bar-fill"
-              :style="{ width: barWidth(item.signal_count) }"
-            ></div>
+    <div class="comparison-section" v-if="compareData.length >= 2">
+      <h2 class="section-heading">Quick Comparison</h2>
+      <div class="compare-bars">
+        <div v-for="item in compareData" :key="item.name" class="compare-row">
+          <span class="compare-name">{{ item.name }}</span>
+          <div class="compare-bar-track">
+            <div class="compare-bar-fill" :style="{ width: compareBarWidth(item.signal_count) + '%' }"></div>
           </div>
-          <span class="comparison-count">{{ item.signal_count ?? 0 }}</span>
+          <span class="compare-count">{{ item.signal_count }}</span>
+          <span class="compare-sentiment" :style="{ color: item.avg_sentiment >= 0 ? '#22c55e' : '#ef4444' }">
+            {{ item.avg_sentiment > 0 ? '+' : '' }}{{ item.avg_sentiment.toFixed(2) }}
+          </span>
+          <span class="compare-trend" :class="'trend-' + item.trend">{{ item.trend === 'rising' ? '\u25B2' : item.trend === 'declining' ? '\u25BC' : '\u2014' }}</span>
         </div>
       </div>
     </div>
@@ -147,7 +148,7 @@
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
-import { getWatchlist, createWatchlistItem } from '../api/intelligence'
+import { getWatchlist, createWatchlistItem, getWatchlistCompare } from '../api/intelligence'
 import { Eye, PlusCircle } from 'lucide-vue-next'
 
 const router = useRouter()
@@ -158,6 +159,8 @@ const items = ref([])
 const showAddForm = ref(false)
 const submitting = ref(false)
 const addError = ref('')
+
+const compareData = ref([])
 
 const newItem = ref({
   name: '',
@@ -207,6 +210,9 @@ const barWidth = (count) => {
   const pct = ((count ?? 0) / maxSignals.value) * 100
   return pct + '%'
 }
+
+const maxCompareCount = computed(() => Math.max(...compareData.value.map(d => d.signal_count), 1))
+const compareBarWidth = (count) => (count / maxCompareCount.value) * 100
 
 const countryFlag = (code) => {
   if (!code || code.length !== 2) return ''
@@ -296,6 +302,17 @@ const loadWatchlist = async () => {
   }
 }
 
+const loadCompareData = async () => {
+  try {
+    const res = await getWatchlistCompare()
+    const d = res.data || res
+    compareData.value = Array.isArray(d) ? d : (d.data || [])
+  } catch (e) {
+    // Compare data is non-critical, silently fail
+    compareData.value = []
+  }
+}
+
 const submitItem = async () => {
   submitting.value = true
   addError.value = ''
@@ -329,6 +346,7 @@ const onAddNewEvent = () => {
 
 onMounted(() => {
   loadWatchlist()
+  loadCompareData()
   window.addEventListener('watchlist-add-new', onAddNewEvent)
 })
 
@@ -718,42 +736,48 @@ onBeforeUnmount(() => {
 /* ── Quick Comparison ── */
 .comparison-section {
   margin-top: 32px;
-  padding-top: 24px;
-  border-top: 1px solid #222;
+  padding: 20px;
+  background: #141414;
+  border: 1px solid #222;
+  border-radius: 2px;
 }
 
-.comparison-title {
+.section-heading {
   font-family: 'JetBrains Mono', monospace;
   font-size: 0.7rem;
   letter-spacing: 2px;
   text-transform: uppercase;
   color: #666;
-  margin-bottom: 16px;
+  margin: 0 0 16px 0;
+  font-weight: 400;
 }
 
-.comparison-bars {
+.compare-bars {
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
 
-.comparison-row {
+.compare-row {
   display: flex;
   align-items: center;
   gap: 12px;
 }
 
-.comparison-name {
+.compare-name {
   font-family: 'JetBrains Mono', monospace;
   font-size: 0.75rem;
   color: #ccc;
   min-width: 130px;
   text-align: right;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.comparison-bar-track {
+.compare-bar-track {
   flex: 1;
-  max-width: 400px;
+  max-width: 300px;
   height: 14px;
   background: #1a1a1a;
   border: 1px solid #2a2a2a;
@@ -761,17 +785,43 @@ onBeforeUnmount(() => {
   border-radius: 1px;
 }
 
-.comparison-bar-fill {
+.compare-bar-fill {
   height: 100%;
   background: #FF4500;
   transition: width 0.4s ease;
   border-radius: 1px;
 }
 
-.comparison-count {
+.compare-count {
   font-family: 'JetBrains Mono', monospace;
   font-size: 0.75rem;
   color: #888;
   min-width: 32px;
+  text-align: right;
+}
+
+.compare-sentiment {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  min-width: 48px;
+  text-align: right;
+}
+
+.compare-trend {
+  font-size: 0.85rem;
+  min-width: 20px;
+  text-align: center;
+}
+
+.trend-rising {
+  color: #F44336;
+}
+
+.trend-declining {
+  color: #4CAF50;
+}
+
+.trend-stable {
+  color: #666;
 }
 </style>
