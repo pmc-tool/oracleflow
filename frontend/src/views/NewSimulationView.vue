@@ -1,6 +1,25 @@
 <template>
   <div class="new-sim">
     <h1 class="page-title">New Simulation</h1>
+
+    <!-- Mode tabs -->
+    <div class="sim-tabs">
+      <button class="sim-tab" :class="{ active: simMode === 'signals' }" @click="simMode = 'signals'">From Signals</button>
+      <button class="sim-tab" :class="{ active: simMode === 'upload' }" @click="simMode = 'upload'">Upload Document</button>
+    </div>
+
+    <!-- Upload Document mode -->
+    <div v-if="simMode === 'upload'" class="upload-mode">
+      <p class="page-desc">Upload a document or paste text. OracleFlow will extract entities, build a knowledge graph, and simulate agent interactions.</p>
+      <div class="upload-redirect">
+        <router-link to="/simulate/advanced" class="upload-link">
+          Open Document Upload Interface &rarr;
+        </router-link>
+      </div>
+    </div>
+
+    <!-- Signals mode -->
+    <template v-if="simMode === 'signals'">
     <p class="page-desc">Select intelligence signals and describe a scenario. OracleFlow will build a simulation document, generate AI agents, and predict outcomes.</p>
 
     <!-- Signal pre-fill banner -->
@@ -230,6 +249,7 @@
       <span v-if="running">Simulation Running...</span>
       <span v-else>Run Simulation &rarr;</span>
     </button>
+    </template>
   </div>
 </template>
 
@@ -244,6 +264,7 @@ import { generateReport, getReportStatus, getReport } from '../api/report'
 const router = useRouter()
 const route = useRoute()
 
+const simMode = ref('signals')
 const PAGE_SIZE = 20
 const MAX_SELECTION = 30
 
@@ -610,6 +631,60 @@ onUnmounted(() => {
 .new-sim {
   max-width: 900px;
   margin: 0 auto;
+}
+
+.sim-tabs {
+  display: flex;
+  gap: 0;
+  margin-bottom: 24px;
+  border-bottom: 1px solid #333;
+}
+
+.sim-tab {
+  padding: 10px 24px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  background: none;
+  border: none;
+  color: #666;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.sim-tab:hover { color: #e8e8e8; }
+
+.sim-tab.active {
+  color: #FF4500;
+  border-bottom-color: #FF4500;
+}
+
+.upload-mode {
+  padding: 40px 0;
+}
+
+.upload-redirect {
+  margin-top: 24px;
+}
+
+.upload-link {
+  display: inline-block;
+  padding: 14px 28px;
+  background: #141414;
+  border: 1px solid #333;
+  color: #e8e8e8;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.upload-link:hover {
+  border-color: #FF4500;
+  background: #1a1a1a;
 }
 
 .page-title {

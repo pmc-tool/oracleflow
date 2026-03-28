@@ -44,10 +44,6 @@
         <Plus :size="16" class="nav-icon" />
         <span>New Simulation</span>
       </router-link>
-      <router-link to="/simulate/advanced" class="nav-link nav-sub-link" active-class="active">
-        <Upload :size="16" class="nav-icon" />
-        <span>Advanced (Upload)</span>
-      </router-link>
     </div>
 
     <div class="nav-divider"></div>
@@ -78,7 +74,7 @@ import { getUnreadCount } from '../api/intelligence'
 import NotificationPanel from './NotificationPanel.vue'
 import {
   LayoutDashboard, Monitor, Radio, Users, Globe,
-  FlaskConical, Plus, Upload, Settings, Bell
+  FlaskConical, Plus, Settings, Bell, Upload
 } from 'lucide-vue-next'
 
 const router = useRouter()
