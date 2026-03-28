@@ -1095,7 +1095,8 @@ onUnmounted(() => {
   justify-content: space-between;
   padding: 0 24px;
   height: 56px;
-  background: #000;
+  background: #0a0a0a;
+  border-bottom: 1px solid #333;
   color: #fff;
   z-index: 10;
   position: relative;
@@ -1107,6 +1108,7 @@ onUnmounted(() => {
   letter-spacing: 0.1em;
   cursor: pointer;
   transition: opacity 0.2s;
+  color: #FF4500;
 }
 
 .nav-brand:hover {
@@ -1123,7 +1125,7 @@ onUnmounted(() => {
 }
 
 .step-badge {
-  background: #FF6B35;
+  background: #FF4500;
   color: #fff;
   padding: 2px 8px;
   font-size: 0.7rem;
@@ -1152,7 +1154,7 @@ onUnmounted(() => {
 }
 
 .status-dot.processing {
-  background: #FF6B35;
+  background: #FF4500;
   animation: pulse 1.5s infinite;
 }
 
@@ -1171,7 +1173,7 @@ onUnmounted(() => {
 
 .status-text {
   font-size: 0.75rem;
-  color: #999;
+  color: #666;
 }
 
 /* Main Content Area */
@@ -1187,9 +1189,9 @@ onUnmounted(() => {
   flex: none; /* Fixed width initially */
   display: flex;
   flex-direction: column;
-  border-right: 1px solid #E0E0E0;
+  border-right: 1px solid #333;
   transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-  background: #fff;
+  background: #0a0a0a;
   z-index: 5;
 }
 
@@ -1203,8 +1205,8 @@ onUnmounted(() => {
   align-items: center;
   justify-content: space-between;
   padding: 12px 24px;
-  border-bottom: 1px solid #E0E0E0;
-  background: #fff;
+  border-bottom: 1px solid #333;
+  background: #111;
   height: 50px;
 }
 
@@ -1215,7 +1217,7 @@ onUnmounted(() => {
 }
 
 .header-deco {
-  color: #FF6B35;
+  color: #FF4500;
   font-size: 0.8rem;
 }
 
@@ -1230,7 +1232,7 @@ onUnmounted(() => {
   align-items: center;
   gap: 16px;
   font-size: 0.75rem;
-  color: #666;
+  color: #888;
 }
 
 .stat-item {
@@ -1241,7 +1243,7 @@ onUnmounted(() => {
 
 .stat-val {
   font-weight: 600;
-  color: #333;
+  color: #e8e8e8;
 }
 
 .stat-divider {
@@ -1264,13 +1266,13 @@ onUnmounted(() => {
   border: 1px solid transparent;
   cursor: pointer;
   transition: all 0.2s;
-  color: #666;
+  color: #888;
   border-radius: 2px;
 }
 
 .action-btn:hover:not(:disabled) {
-  background: #F5F5F5;
-  color: #000;
+  background: #1a1a1a;
+  color: #e8e8e8;
 }
 
 .action-btn:disabled {
@@ -1333,7 +1335,7 @@ onUnmounted(() => {
   height: 60px;
   top: 10px;
   left: 10px;
-  border-right-color: #FF6B35;
+  border-right-color: #FF4500;
   animation-delay: 0.2s;
 }
 
@@ -1353,13 +1355,13 @@ onUnmounted(() => {
 .loading-text,
 .waiting-text {
   font-size: 0.9rem;
-  color: #333;
+  color: #e8e8e8;
   margin: 0 0 8px;
 }
 
 .waiting-hint {
   font-size: 0.8rem;
-  color: #999;
+  color: #666;
   margin: 0;
 }
 
@@ -1393,16 +1395,16 @@ onUnmounted(() => {
   align-items: center;
   gap: 8px;
   padding: 8px 16px;
-  background: rgba(255, 107, 53, 0.1);
-  border: 1px solid #FF6B35;
+  background: rgba(255, 69, 0, 0.1);
+  border: 1px solid #FF4500;
   font-size: 0.8rem;
-  color: #FF6B35;
+  color: #FF4500;
 }
 
 .building-dot {
   width: 8px;
   height: 8px;
-  background: #FF6B35;
+  background: #FF4500;
   border-radius: 50%;
   animation: pulse 1s infinite;
 }
@@ -1414,8 +1416,8 @@ onUnmounted(() => {
   right: 16px;
   width: 320px;
   max-height: calc(100% - 32px);
-  background: #fff;
-  border: 1px solid #E0E0E0;
+  background: #111;
+  border: 1px solid #333;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
   overflow: hidden;
   display: flex;
@@ -1428,14 +1430,14 @@ onUnmounted(() => {
   align-items: center;
   gap: 10px;
   padding: 12px 16px;
-  background: #FAFAFA;
-  border-bottom: 1px solid #E0E0E0;
+  background: #111;
+  border-bottom: 1px solid #333;
 }
 
 .detail-title {
   font-size: 0.9rem;
   font-weight: 600;
-  color: #333;
+  color: #e8e8e8;
 }
 
 .detail-badge {
@@ -1455,13 +1457,13 @@ onUnmounted(() => {
   background: none;
   border: none;
   font-size: 1.2rem;
-  color: #999;
+  color: #666;
   cursor: pointer;
   transition: color 0.2s;
 }
 
 .detail-close:hover {
-  color: #333;
+  color: #e8e8e8;
 }
 
 .detail-content {
@@ -1478,21 +1480,21 @@ onUnmounted(() => {
 
 .detail-label {
   font-size: 0.8rem;
-  color: #999;
+  color: #666;
   min-width: 70px;
   flex-shrink: 0;
 }
 
 .detail-value {
   font-size: 0.85rem;
-  color: #333;
+  color: #e8e8e8;
   word-break: break-word;
 }
 
 .detail-value.uuid {
   font-family: 'JetBrains Mono', monospace;
   font-size: 0.75rem;
-  color: #666;
+  color: #888;
 }
 
 .detail-section {
@@ -1502,11 +1504,11 @@ onUnmounted(() => {
 .detail-summary {
   margin: 8px 0 0 0;
   font-size: 0.85rem;
-  color: #333;
+  color: #e8e8e8;
   line-height: 1.6;
   padding: 10px;
-  background: #F9F9F9;
-  border-left: 3px solid #FF6B35;
+  background: rgba(255,69,0,0.1);
+  border-left: 3px solid #FF4500;
 }
 
 .detail-labels {
@@ -1518,9 +1520,9 @@ onUnmounted(() => {
 .label-tag {
   padding: 2px 8px;
   font-size: 0.75rem;
-  background: #F0F0F0;
-  border: 1px solid #E0E0E0;
-  color: #666;
+  background: #222;
+  border: 1px solid #333;
+  color: #888;
 }
 
 /* Edge Detail Relationship Display */
@@ -1531,48 +1533,48 @@ onUnmounted(() => {
   gap: 8px;
   margin-bottom: 16px;
   padding: 12px;
-  background: #F9F9F9;
-  border: 1px solid #E0E0E0;
+  background: #1a1a1a;
+  border: 1px solid #333;
 }
 
 .edge-source,
 .edge-target {
   font-size: 0.85rem;
   font-weight: 500;
-  color: #333;
+  color: #e8e8e8;
 }
 
 .edge-arrow {
-  color: #999;
+  color: #666;
 }
 
 .edge-type {
   padding: 2px 8px;
   font-size: 0.75rem;
-  background: #FF6B35;
+  background: #FF4500;
   color: #fff;
 }
 
 .detail-value.highlight {
   font-weight: 600;
-  color: #000;
+  color: #e8e8e8;
 }
 
 .detail-subtitle {
   font-size: 0.9rem;
   font-weight: 600;
-  color: #333;
+  color: #e8e8e8;
   margin: 16px 0 12px 0;
   padding-bottom: 8px;
-  border-bottom: 1px solid #E0E0E0;
+  border-bottom: 1px solid #333;
 }
 
 /* Properties List */
 .properties-list {
   margin-top: 8px;
   padding: 10px;
-  background: #F9F9F9;
-  border: 1px solid #E0E0E0;
+  background: #1a1a1a;
+  border: 1px solid #333;
 }
 
 .property-item {
@@ -1586,13 +1588,13 @@ onUnmounted(() => {
 }
 
 .property-key {
-  color: #666;
+  color: #888;
   margin-right: 8px;
   font-family: 'JetBrains Mono', monospace;
 }
 
 .property-value {
-  color: #333;
+  color: #e8e8e8;
   word-break: break-word;
 }
 
@@ -1609,9 +1611,9 @@ onUnmounted(() => {
   padding: 6px 10px;
   font-size: 0.75rem;
   font-family: 'JetBrains Mono', monospace;
-  background: #F0F0F0;
-  border: 1px solid #E0E0E0;
-  color: #666;
+  background: #222;
+  border: 1px solid #333;
+  color: #888;
   word-break: break-all;
 }
 
@@ -1627,8 +1629,8 @@ onUnmounted(() => {
   flex-wrap: wrap;
   gap: 16px;
   padding: 12px 24px;
-  border-top: 1px solid #E0E0E0;
-  background: #FAFAFA;
+  border-top: 1px solid #333;
+  background: #111;
 }
 
 .legend-item {
@@ -1645,11 +1647,11 @@ onUnmounted(() => {
 }
 
 .legend-label {
-  color: #333;
+  color: #e8e8e8;
 }
 
 .legend-count {
-  color: #999;
+  color: #666;
 }
 
 /* Right Panel - 50% default */
@@ -1658,7 +1660,7 @@ onUnmounted(() => {
   flex: none;
   display: flex;
   flex-direction: column;
-  background: #fff;
+  background: #0a0a0a;
   transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease, transform 0.3s ease;
   overflow: hidden;
   opacity: 1;
@@ -1678,7 +1680,7 @@ onUnmounted(() => {
 }
 
 .right-panel .header-icon {
-  color: #FF6B35;
+  color: #FF4500;
   margin-right: 8px;
 }
 
@@ -1692,7 +1694,7 @@ onUnmounted(() => {
 /* Workflow Phases */
 .process-phase {
   margin-bottom: 24px;
-  border: 1px solid #E0E0E0;
+  border: 1px solid #333;
   opacity: 0.5;
   transition: all 0.3s;
 }
@@ -1703,7 +1705,7 @@ onUnmounted(() => {
 }
 
 .process-phase.active {
-  border-color: #FF6B35;
+  border-color: #FF4500;
 }
 
 .process-phase.completed {
@@ -1715,8 +1717,8 @@ onUnmounted(() => {
   align-items: flex-start;
   gap: 16px;
   padding: 16px;
-  background: #FAFAFA;
-  border-bottom: 1px solid #E0E0E0;
+  background: #111;
+  border-bottom: 1px solid #333;
 }
 
 .process-phase.active .phase-header {
@@ -1735,7 +1737,7 @@ onUnmounted(() => {
 }
 
 .process-phase.active .phase-num {
-  color: #FF6B35;
+  color: #FF4500;
 }
 
 .process-phase.completed .phase-num {
@@ -1754,19 +1756,19 @@ onUnmounted(() => {
 
 .phase-api {
   font-size: 0.75rem;
-  color: #999;
+  color: #666;
   font-family: 'JetBrains Mono', monospace;
 }
 
 .phase-status {
   font-size: 0.75rem;
   padding: 4px 10px;
-  background: #eee;
-  color: #666;
+  background: #222;
+  color: #888;
 }
 
 .phase-status.active {
-  background: #FF6B35;
+  background: #FF4500;
   color: #fff;
 }
 
@@ -1790,9 +1792,9 @@ onUnmounted(() => {
 .entity-tag {
   font-size: 0.75rem;
   padding: 4px 10px;
-  background: #F5F5F5;
-  border: 1px solid #E0E0E0;
-  color: #333;
+  background: #1a1a1a;
+  border: 1px solid #333;
+  color: #e8e8e8;
 }
 
 /* Relationship List */
@@ -1814,7 +1816,7 @@ onUnmounted(() => {
 
 .rel-source,
 .rel-target {
-  color: #333;
+  color: #e8e8e8;
 }
 
 .rel-arrow {
@@ -1822,13 +1824,13 @@ onUnmounted(() => {
 }
 
 .rel-name {
-  color: #FF6B35;
+  color: #FF4500;
   font-weight: 500;
 }
 
 .relation-more {
   padding-top: 8px;
-  color: #999;
+  color: #666;
   font-size: 0.75rem;
 }
 
@@ -1846,40 +1848,40 @@ onUnmounted(() => {
   width: 20px;
   height: 20px;
   border: 2px solid #FFE0D6;
-  border-top-color: #FF6B35;
+  border-top-color: #FF4500;
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
 
 .progress-text {
   font-size: 0.85rem;
-  color: #333;
+  color: #e8e8e8;
 }
 
 /* Waiting State */
 .waiting-state {
   padding: 16px;
-  background: #F9F9F9;
-  border: 1px dashed #E0E0E0;
+  background: #1a1a1a;
+  border: 1px dashed #333;
   text-align: center;
 }
 
 .waiting-hint {
   font-size: 0.85rem;
-  color: #999;
+  color: #666;
 }
 
 /* Progress Bar */
 .progress-bar {
   height: 6px;
-  background: #E0E0E0;
+  background: #333;
   margin-bottom: 8px;
   overflow: hidden;
 }
 
 .progress-fill {
   height: 100%;
-  background: #FF6B35;
+  background: #FF4500;
   transition: width 0.3s;
 }
 
@@ -1890,11 +1892,11 @@ onUnmounted(() => {
 }
 
 .progress-message {
-  color: #666;
+  color: #888;
 }
 
 .progress-percent {
-  color: #FF6B35;
+  color: #FF4500;
   font-weight: 600;
 }
 
@@ -1908,20 +1910,20 @@ onUnmounted(() => {
   flex: 1;
   text-align: center;
   padding: 12px;
-  background: #F5F5F5;
+  background: #1a1a1a;
 }
 
 .result-value {
   display: block;
   font-size: 1.5rem;
   font-weight: 700;
-  color: #000;
+  color: #e8e8e8;
   margin-bottom: 4px;
 }
 
 .result-label {
   font-size: 0.7rem;
-  color: #999;
+  color: #666;
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -1930,7 +1932,7 @@ onUnmounted(() => {
 .next-step-section {
   margin-top: 24px;
   padding-top: 24px;
-  border-top: 1px solid #E0E0E0;
+  border-top: 1px solid #333;
 }
 
 .next-step-btn {
@@ -1951,7 +1953,7 @@ onUnmounted(() => {
 }
 
 .next-step-btn:hover:not(:disabled) {
-  background: #FF6B35;
+  background: #FF4500;
 }
 
 .next-step-btn:disabled {
@@ -1965,8 +1967,8 @@ onUnmounted(() => {
 
 /* Project Info Panel */
 .project-panel {
-  border-top: 1px solid #E0E0E0;
-  background: #FAFAFA;
+  border-top: 1px solid #333;
+  background: #111;
 }
 
 .project-header {
@@ -1974,11 +1976,11 @@ onUnmounted(() => {
   align-items: center;
   gap: 10px;
   padding: 12px 24px;
-  border-bottom: 1px solid #E0E0E0;
+  border-bottom: 1px solid #333;
 }
 
 .project-icon {
-  color: #FF6B35;
+  color: #FF4500;
 }
 
 .project-title {
@@ -1995,7 +1997,7 @@ onUnmounted(() => {
   justify-content: space-between;
   align-items: flex-start;
   padding: 8px 0;
-  border-bottom: 1px dashed #E0E0E0;
+  border-bottom: 1px dashed #333;
   font-size: 0.8rem;
 }
 
@@ -2004,12 +2006,12 @@ onUnmounted(() => {
 }
 
 .item-label {
-  color: #999;
+  color: #666;
   flex-shrink: 0;
 }
 
 .item-value {
-  color: #333;
+  color: #e8e8e8;
   text-align: right;
   max-width: 60%;
   word-break: break-all;
@@ -2018,7 +2020,7 @@ onUnmounted(() => {
 .item-value.code {
   font-family: 'JetBrains Mono', monospace;
   font-size: 0.75rem;
-  color: #666;
+  color: #888;
 }
 
 /* Responsive */
@@ -2030,7 +2032,7 @@ onUnmounted(() => {
   .left-panel {
     width: 100% !important;
     border-right: none;
-    border-bottom: 1px solid #E0E0E0;
+    border-bottom: 1px solid #333;
     height: 50vh;
   }
   

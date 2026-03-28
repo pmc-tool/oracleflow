@@ -963,7 +963,7 @@ watch(() => props.simulationId, (newId) => {
   height: 100%;
   display: flex;
   flex-direction: column;
-  background: #F8F9FA;
+  background: #111;
   font-family: 'Inter', 'Noto Sans SC', system-ui, sans-serif;
   overflow: hidden;
 }
@@ -984,7 +984,7 @@ watch(() => props.simulationId, (newId) => {
 .left-panel.report-style {
   width: 45%;
   min-width: 450px;
-  background: #FFFFFF;
+  background: #0a0a0a;
   border-right: 1px solid #E5E7EB;
   overflow-y: auto;
   display: flex;
@@ -1304,7 +1304,7 @@ watch(() => props.simulationId, (newId) => {
   flex: 1;
   display: flex;
   flex-direction: column;
-  background: #FFFFFF;
+  background: #0a0a0a;
   overflow: hidden;
 }
 
@@ -1437,7 +1437,7 @@ watch(() => props.simulationId, (newId) => {
 .interaction-header {
   padding: 16px 24px;
   border-bottom: 1px solid #E5E7EB;
-  background: #FAFAFA;
+  background: #111;
 }
 
 .tab-switcher {
@@ -1533,7 +1533,7 @@ watch(() => props.simulationId, (newId) => {
 .tools-card-toggle {
   width: 28px;
   height: 28px;
-  background: #FFFFFF;
+  background: #0a0a0a;
   border: 1px solid #E5E7EB;
   border-radius: 6px;
   cursor: pointer;
@@ -1572,7 +1572,7 @@ watch(() => props.simulationId, (newId) => {
   display: flex;
   gap: 10px;
   padding: 12px;
-  background: #FFFFFF;
+  background: #0a0a0a;
   border-radius: 10px;
   border: 1px solid #E5E7EB;
   transition: all 0.2s ease;
@@ -1700,7 +1700,7 @@ watch(() => props.simulationId, (newId) => {
 .profile-card-toggle {
   width: 28px;
   height: 28px;
-  background: #FFFFFF;
+  background: #0a0a0a;
   border: 1px solid #E5E7EB;
   border-radius: 6px;
   cursor: pointer;
@@ -1742,7 +1742,7 @@ watch(() => props.simulationId, (newId) => {
 }
 
 .profile-card-bio {
-  background: #FFFFFF;
+  background: #0a0a0a;
   padding: 12px 14px;
   border-radius: 8px;
   border: 1px solid #E5E7EB;
@@ -1821,7 +1821,7 @@ watch(() => props.simulationId, (newId) => {
   left: 50%;
   transform: translateX(-50%);
   min-width: 240px;
-  background: #FFFFFF;
+  background: #0a0a0a;
   border: 1px solid #E5E7EB;
   border-radius: 12px;
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12), 0 4px 12px rgba(0, 0, 0, 0.06);
@@ -2473,7 +2473,7 @@ watch(() => props.simulationId, (newId) => {
   align-items: flex-start;
   gap: 8px;
   padding: 12px 14px;
-  background: #FFFFFF;
+  background: #0a0a0a;
   border-radius: 8px;
   margin-bottom: 12px;
   font-size: 13px;
