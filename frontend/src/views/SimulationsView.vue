@@ -90,9 +90,9 @@ async function fetchSimulations() {
   currentPage.value = 1
   try {
     const res = await getSimulationHistory()
-    if (res.data && res.data.success) {
-      simulations.value = res.data.data || []
-    }
+    const d = res.data || res
+    const items = d.data || d.simulations || d.items || (Array.isArray(d) ? d : [])
+    simulations.value = items
   } catch (e) {
     simulations.value = []
   } finally {
