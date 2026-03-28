@@ -3,7 +3,7 @@
     <div class="nav-top-row">
       <div class="nav-logo">OracleFlow</div>
       <button class="bell-btn" @click="showNotifications = true">
-        <span class="bell-icon">&#128276;</span>
+        <Bell :size="18" />
         <span v-if="unreadCount > 0" class="bell-badge">{{ unreadCount > 99 ? '99+' : unreadCount }}</span>
       </button>
     </div>
@@ -11,23 +11,23 @@
     <div class="nav-section-label">INTELLIGENCE</div>
     <div class="nav-links">
       <router-link to="/intel" class="nav-link" active-class="active">
-        <span class="nav-icon">&#9636;</span>
+        <LayoutDashboard :size="18" class="nav-icon" />
         <span>Dashboard</span>
       </router-link>
       <router-link to="/sites" class="nav-link" active-class="active">
-        <span class="nav-icon">&#9673;</span>
+        <Monitor :size="18" class="nav-icon" />
         <span>Sites</span>
       </router-link>
       <router-link to="/signals" class="nav-link" active-class="active">
-        <span class="nav-icon">&#9655;</span>
+        <Radio :size="18" class="nav-icon" />
         <span>Signals</span>
       </router-link>
       <router-link to="/entities" class="nav-link" active-class="active">
-        <span class="nav-icon">&#9670;</span>
+        <Users :size="18" class="nav-icon" />
         <span>Entities</span>
       </router-link>
       <router-link to="/countries" class="nav-link" active-class="active">
-        <span class="nav-icon">&#9728;</span>
+        <Globe :size="18" class="nav-icon" />
         <span>Countries</span>
       </router-link>
     </div>
@@ -37,15 +37,15 @@
     <div class="nav-section-label">SIMULATION</div>
     <div class="nav-links">
       <router-link to="/simulations" class="nav-link" active-class="active">
-        <span class="nav-icon">&#9776;</span>
+        <FlaskConical :size="18" class="nav-icon" />
         <span>Simulations</span>
       </router-link>
       <router-link to="/simulate" class="nav-link nav-sub-link" active-class="active">
-        <span class="nav-icon">&#9881;</span>
+        <Plus :size="16" class="nav-icon" />
         <span>New Simulation</span>
       </router-link>
       <router-link to="/simulate/advanced" class="nav-link nav-sub-link" active-class="active">
-        <span class="nav-icon">&#9998;</span>
+        <Upload :size="16" class="nav-icon" />
         <span>Advanced (Upload)</span>
       </router-link>
     </div>
@@ -54,7 +54,7 @@
     <div class="nav-section-label">ACCOUNT</div>
     <div class="nav-links">
       <router-link to="/settings" class="nav-link" active-class="active">
-        <span class="nav-icon">&#9881;</span>
+        <Settings :size="18" class="nav-icon" />
         <span>Settings</span>
       </router-link>
     </div>
@@ -76,6 +76,10 @@ import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
 import { getUnreadCount } from '../api/intelligence'
 import NotificationPanel from './NotificationPanel.vue'
+import {
+  LayoutDashboard, Monitor, Radio, Users, Globe,
+  FlaskConical, Plus, Upload, Settings, Bell
+} from 'lucide-vue-next'
 
 const router = useRouter()
 
@@ -260,10 +264,15 @@ function handleSignOut() {
 }
 
 .nav-icon {
-  font-size: 1rem;
-  width: 20px;
-  text-align: center;
-  line-height: 1;
+  width: 18px;
+  min-width: 18px;
+  flex-shrink: 0;
+  opacity: 0.6;
+}
+
+.nav-link.active .nav-icon {
+  opacity: 1;
+  color: #FF4500;
 }
 
 .nav-divider {
