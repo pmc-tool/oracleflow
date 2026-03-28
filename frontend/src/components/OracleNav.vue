@@ -11,24 +11,24 @@
     <div class="nav-section-label">INTELLIGENCE</div>
     <div class="nav-links">
       <router-link to="/intel" class="nav-link" active-class="active">
-        <span class="nav-icon">//</span>
-        <span class="nav-text">Dashboard</span>
+        <span class="nav-icon">&#9636;</span>
+        <span>Dashboard</span>
       </router-link>
       <router-link to="/sites" class="nav-link" active-class="active">
-        <span class="nav-icon">@</span>
-        <span class="nav-text">Sites</span>
+        <span class="nav-icon">&#9673;</span>
+        <span>Sites</span>
       </router-link>
       <router-link to="/signals" class="nav-link" active-class="active">
-        <span class="nav-icon">></span>
-        <span class="nav-text">Signals</span>
+        <span class="nav-icon">&#9655;</span>
+        <span>Signals</span>
       </router-link>
       <router-link to="/entities" class="nav-link" active-class="active">
-        <span class="nav-icon">#</span>
-        <span class="nav-text">Entities</span>
+        <span class="nav-icon">&#9670;</span>
+        <span>Entities</span>
       </router-link>
       <router-link to="/countries" class="nav-link" active-class="active">
-        <span class="nav-icon">*</span>
-        <span class="nav-text">Countries</span>
+        <span class="nav-icon">&#9728;</span>
+        <span>Countries</span>
       </router-link>
     </div>
 
@@ -37,16 +37,16 @@
     <div class="nav-section-label">SIMULATION</div>
     <div class="nav-links">
       <router-link to="/simulations" class="nav-link" active-class="active">
-        <span class="nav-icon">~</span>
-        <span class="nav-text">Simulations</span>
+        <span class="nav-icon">&#9776;</span>
+        <span>Simulations</span>
       </router-link>
       <router-link to="/simulate" class="nav-link nav-sub-link" active-class="active">
-        <span class="nav-icon">+</span>
-        <span class="nav-text">New Simulation</span>
+        <span class="nav-icon">&#9881;</span>
+        <span>New Simulation</span>
       </router-link>
       <router-link to="/simulate/advanced" class="nav-link nav-sub-link" active-class="active">
-        <span class="nav-icon">^</span>
-        <span class="nav-text">Advanced (Upload)</span>
+        <span class="nav-icon">&#9998;</span>
+        <span>Advanced (Upload)</span>
       </router-link>
     </div>
 
@@ -54,8 +54,8 @@
     <div class="nav-section-label">ACCOUNT</div>
     <div class="nav-links">
       <router-link to="/settings" class="nav-link" active-class="active">
-        <span class="nav-icon">%</span>
-        <span class="nav-text">Settings</span>
+        <span class="nav-icon">&#9881;</span>
+        <span>Settings</span>
       </router-link>
     </div>
 
@@ -227,26 +227,24 @@ function handleSignOut() {
 .nav-link {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 7px 16px 7px 20px;
-  color: #999;
+  gap: 10px;
+  padding: 8px 20px;
+  color: #FFFFFF;
   text-decoration: none;
   font-family: 'Space Grotesk', system-ui, sans-serif;
-  font-size: 0.82rem;
+  font-size: 0.85rem;
   font-weight: 400;
-  transition: background 0.15s, color 0.15s;
+  transition: background 0.15s;
   border-left: 3px solid transparent;
 }
 
 .nav-link:hover {
   background: #111;
-  color: #e8e8e8;
 }
 
 .nav-link.active {
   border-left-color: #FF4500;
   background: #111;
-  color: #FFFFFF;
   font-weight: 600;
 }
 
@@ -262,24 +260,14 @@ function handleSignOut() {
 }
 
 .nav-icon {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 0.8rem;
-  width: 18px;
-  min-width: 18px;
+  font-size: 0.85rem;
+  width: 20px;
+  min-width: 20px;
   flex-shrink: 0;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: #FF4500;
-  opacity: 0.7;
-}
-
-.nav-link.active .nav-icon {
-  opacity: 1;
-}
-
-.nav-text {
-  white-space: nowrap;
+  line-height: 1;
 }
 
 .nav-divider {
