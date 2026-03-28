@@ -108,6 +108,71 @@ def create_rule():
         db.close()
 
 
+@alerts_bp.route('/rules/<int:rule_id>', methods=['PUT'])
+@require_auth
+def update_rule(rule_id):
+    """Update an existing alert rule."""
+    db = get_session()
+    try:
+        stmt = select(AlertRuleDB).where(
+            AlertRuleDB.id == rule_id,
+            AlertRuleDB.organization_id == g.org_id,
+        )
+        rule = db.execute(stmt).scalar_one_or_none()
+        if not rule:
+            return jsonify({"success": False, "error": "Alert rule not found"}), 404
+
+        data = request.get_json() or {}
+
+        if "name" in data:
+            rule.name = data["name"]
+        if "condition_type" in data:
+            rule.condition_type = data["condition_type"]
+        if "threshold" in data:
+            rule.threshold = data["threshold"]
+        if "country_codes" in data:
+            rule.country_codes_json = data["country_codes"]
+        if "categories" in data:
+            rule.categories_json = data["categories"]
+        if "page_types" in data:
+            rule.page_types_json = data["page_types"]
+        if "keywords" in data:
+            rule.keywords_json = data["keywords"]
+        if "severity" in data:
+            rule.severity = data["severity"]
+        if "channels" in data:
+            rule.channels_json = data["channels"]
+        if "webhook_url" in data:
+            rule.webhook_url = data["webhook_url"]
+        if "enabled" in data:
+            rule.enabled = data["enabled"]
+
+        db.commit()
+
+        return jsonify({"success": True, "data": {
+            "id": rule.id,
+            "user_id": rule.user_id,
+            "org_id": rule.organization_id,
+            "name": rule.name,
+            "condition_type": rule.condition_type,
+            "threshold": rule.threshold,
+            "country_codes": rule.country_codes_json or [],
+            "categories": rule.categories_json or [],
+            "page_types": rule.page_types_json or [],
+            "keywords": rule.keywords_json or [],
+            "severity": rule.severity,
+            "channels": rule.channels_json or [],
+            "webhook_url": rule.webhook_url or "",
+            "enabled": rule.enabled,
+        }})
+    except Exception as e:
+        db.rollback()
+        logger.exception("Alerts API error: %s", e)
+        return jsonify({"success": False, "error": "An internal error occurred"}), 500
+    finally:
+        db.close()
+
+
 # ---------------------------------------------------------------------------
 # Notification endpoints
 # ---------------------------------------------------------------------------

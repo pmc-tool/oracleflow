@@ -31,6 +31,7 @@ export const getCountryTrend = (code, days = 30) => service.get(`/api/countries/
 // Alerts
 export const listAlertRules = () => service.get('/api/alerts/rules')
 export const createAlertRule = (rule) => service.post('/api/alerts/rules', rule)
+export const updateAlertRule = (id, data) => service.put(`/api/alerts/rules/${id}`, data)
 
 // World Brief
 export const getWorldBrief = () => service.get('/api/countries/GLOBAL/brief')
@@ -55,6 +56,7 @@ export const getWatchlistSignals = (id, params = {}) => service.get(`/api/watchl
 export const getWatchlistSentiment = (id) => service.get(`/api/watchlist/${id}/sentiment`)
 export const getWatchlistCompare = () => service.get('/api/watchlist/compare')
 export const deleteWatchlistItem = (id) => service.delete(`/api/watchlist/${id}`)
+export const updateWatchlistItem = (id, data) => service.put(`/api/watchlist/${id}`, data)
 
 // User Preferences
 export const getUserPreferences = () => service.get('/api/auth/preferences')

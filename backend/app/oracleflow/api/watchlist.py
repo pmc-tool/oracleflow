@@ -1,8 +1,9 @@
 """Watchlist API endpoints — personalized monitoring for organizations, people, topics."""
 
 import logging
+import re
 from datetime import datetime, timezone
-from urllib.parse import quote_plus
+from urllib.parse import quote_plus, urlparse
 
 from flask import g, jsonify, request
 from sqlalchemy import and_, func, or_, select, cast, Date
@@ -114,6 +115,78 @@ def _generate_google_news_rss(name: str, country_code: str | None = None) -> str
     return f"https://news.google.com/rss/search?q={quote_plus(query)}&hl=en"
 
 
+def _generate_social_rss_feeds(name: str, social_links: dict | None = None) -> list[dict]:
+    """Auto-generate RSS feed URLs for social media platforms.
+
+    Returns a list of dicts: [{"platform": str, "rss_url": str, "label": str}, ...]
+
+    Sources:
+      - YouTube channel RSS (from channel URL or channel_id in social_links)
+      - Reddit search RSS (auto-generated from the watchlist item name)
+      - Twitter/X via Nitter RSS (from twitter handle in social_links)
+    """
+    feeds: list[dict] = []
+    social_links = social_links or {}
+
+    # --- YouTube ---
+    youtube_url = social_links.get("youtube") or social_links.get("youtube_url") or ""
+    channel_id = social_links.get("youtube_channel_id") or ""
+
+    if youtube_url and not channel_id:
+        # Try to extract channel_id from common YouTube channel URL patterns
+        # e.g. https://www.youtube.com/channel/UCxxxxxx
+        m = re.search(r'youtube\.com/channel/([A-Za-z0-9_-]+)', youtube_url)
+        if m:
+            channel_id = m.group(1)
+
+    if channel_id:
+        feeds.append({
+            "platform": "youtube",
+            "rss_url": f"https://www.youtube.com/feeds/videos.xml?channel_id={channel_id}",
+            "label": f"YouTube: {channel_id}",
+        })
+
+    # --- Reddit ---
+    # Always auto-generate a Reddit search RSS for the item name
+    reddit_query = quote_plus(name)
+    feeds.append({
+        "platform": "reddit",
+        "rss_url": f"https://www.reddit.com/search.rss?q={reddit_query}&sort=new",
+        "label": f"Reddit: {name}",
+    })
+
+    # Also add subreddit RSS if provided
+    reddit_url = social_links.get("reddit") or social_links.get("subreddit") or ""
+    if reddit_url:
+        # Extract subreddit name: /r/subreddit or reddit.com/r/subreddit
+        m = re.search(r'(?:reddit\.com)?/r/([A-Za-z0-9_]+)', reddit_url)
+        if m:
+            subreddit = m.group(1)
+            feeds.append({
+                "platform": "reddit",
+                "rss_url": f"https://www.reddit.com/r/{subreddit}/new.rss",
+                "label": f"Reddit: r/{subreddit}",
+            })
+
+    # --- Twitter/X via Nitter ---
+    twitter_handle = social_links.get("twitter") or social_links.get("x") or ""
+    if twitter_handle:
+        # Normalize: strip @ and URL prefixes
+        handle = twitter_handle.strip().lstrip("@")
+        # Extract from URL if full URL was provided
+        m = re.search(r'(?:twitter\.com|x\.com)/([A-Za-z0-9_]+)', handle)
+        if m:
+            handle = m.group(1)
+        if handle:
+            feeds.append({
+                "platform": "twitter",
+                "rss_url": f"https://nitter.net/{handle}/rss",
+                "label": f"Twitter: @{handle}",
+            })
+
+    return feeds
+
+
 def _build_keyword_filter(keywords: list[str]):
     """Build an OR filter matching any keyword in Signal title or summary."""
     conditions = []
@@ -126,6 +199,7 @@ def _build_keyword_filter(keywords: list[str]):
 
 def _serialize_item(item: WatchlistItem, signal_count: int = 0) -> dict:
     """Serialize a WatchlistItem to a JSON-safe dict."""
+    social_links = item.social_links or {}
     return {
         "id": item.id,
         "user_id": item.user_id,
@@ -136,7 +210,8 @@ def _serialize_item(item: WatchlistItem, signal_count: int = 0) -> dict:
         "keywords": item.keywords or [],
         "google_news_rss": item.google_news_rss,
         "websites": item.websites or [],
-        "social_links": item.social_links or {},
+        "social_links": social_links,
+        "social_rss_feeds": social_links.get("rss_feeds", []),
         "is_active": item.is_active,
         "signal_count": signal_count,
         "created_at": item.created_at.isoformat() if item.created_at else None,
@@ -204,6 +279,10 @@ def create_watchlist_item():
         google_news_rss = _generate_google_news_rss(name, country_code)
         websites = data.get("websites") or []
         social_links = data.get("social_links") or {}
+
+        # Auto-generate social media RSS feeds
+        social_rss_feeds = _generate_social_rss_feeds(name, social_links)
+        social_links["rss_feeds"] = social_rss_feeds
 
         item = WatchlistItem(
             user_id=g.user_id,
@@ -384,6 +463,15 @@ def update_watchlist_item(item_id):
             item.google_news_rss = _generate_google_news_rss(
                 item.name, item.country_code
             )
+
+        # Regenerate social RSS feeds if name or social_links changed
+        if "name" in data or "social_links" in data:
+            social_rss_feeds = _generate_social_rss_feeds(
+                item.name, item.social_links or {}
+            )
+            sl = item.social_links or {}
+            sl["rss_feeds"] = social_rss_feeds
+            item.social_links = sl
 
         item.updated_at = datetime.now(timezone.utc)
         db.commit()

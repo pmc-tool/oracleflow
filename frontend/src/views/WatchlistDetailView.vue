@@ -166,18 +166,101 @@
       No matching signals found for this watchlist item yet.
     </div>
 
+    <!-- Add Website to Monitor -->
+    <div v-if="item.name && !loading" class="section-box monitor-section">
+      <h2 class="section-heading">Add Website to Monitor</h2>
+      <div class="monitor-form">
+        <input
+          v-model="newSiteUrl"
+          type="url"
+          class="form-input"
+          placeholder="https://example.com"
+          @keyup.enter="addMonitoredSite"
+        />
+        <button
+          class="btn-action-primary btn-monitor-add"
+          :disabled="!newSiteUrl.trim() || addingSite"
+          @click="addMonitoredSite"
+        >
+          <span v-if="addingSite">Adding...</span>
+          <span v-else>Add Site</span>
+        </button>
+      </div>
+      <div v-if="siteError" class="add-error">{{ siteError }}</div>
+      <div v-if="siteSuccess" class="add-success">{{ siteSuccess }}</div>
+    </div>
+
     <!-- Monitored websites -->
-    <div v-if="item.monitored_sites && item.monitored_sites.length > 0" class="monitored-section">
+    <div v-if="monitoredWebsites.length > 0" class="monitored-section">
       <div class="section-title">MONITORED WEBSITES</div>
       <div class="monitored-list">
-        <div v-for="site in item.monitored_sites" :key="site.id || site.url" class="monitored-item">
+        <div v-for="site in monitoredWebsites" :key="site.id || site.url" class="monitored-item">
           <span class="monitored-url">{{ site.url || site.domain }}</span>
           <span class="monitored-meta">
-            last checked {{ relativeTime(site.last_checked) }}
+            <span v-if="site.last_checked">last checked {{ relativeTime(site.last_checked) }}</span>
             <span v-if="site.change_count">, {{ site.change_count }} changes</span>
+            <span v-if="!site.last_checked && !site.change_count">pending first check</span>
           </span>
         </div>
       </div>
+    </div>
+
+    <!-- Alerts Section -->
+    <div v-if="item.name && !loading" class="section-box alerts-section">
+      <h2 class="section-heading">Alerts</h2>
+      <div v-if="alertRule" class="alert-rule-display">
+        <div class="alert-rule-row">
+          <span class="alert-check">&#10003;</span>
+          <span class="alert-rule-text">
+            Keyword alert: "{{ (alertRule.keywords || []).join('", "') }}"
+            (anomaly > {{ alertRule.threshold }})
+          </span>
+        </div>
+        <div class="alert-controls">
+          <div class="alert-threshold-control">
+            <label class="form-label">THRESHOLD</label>
+            <input
+              v-model.number="editThreshold"
+              type="number"
+              class="form-input form-input-sm"
+              min="0"
+              max="1"
+              step="0.05"
+            />
+            <button
+              class="btn-action-sm"
+              :disabled="editThreshold === alertRule.threshold || updatingAlert"
+              @click="updateThreshold"
+            >Update</button>
+          </div>
+          <div class="alert-keyword-control">
+            <label class="form-label">ADD KEYWORD</label>
+            <div class="keyword-add-row">
+              <input
+                v-model="newAlertKeyword"
+                type="text"
+                class="form-input form-input-sm"
+                placeholder="e.g. coalition"
+                @keyup.enter="addAlertKeyword"
+              />
+              <button
+                class="btn-action-sm"
+                :disabled="!newAlertKeyword.trim() || updatingAlert"
+                @click="addAlertKeyword"
+              >Add</button>
+            </div>
+          </div>
+        </div>
+        <div class="alert-keywords-list">
+          <span v-for="kw in (alertRule.keywords || [])" :key="kw" class="alert-keyword-tag">
+            {{ kw }}
+            <button class="keyword-remove" @click="removeAlertKeyword(kw)">&times;</button>
+          </span>
+        </div>
+        <div v-if="alertError" class="add-error">{{ alertError }}</div>
+        <div v-if="alertSuccess" class="add-success">{{ alertSuccess }}</div>
+      </div>
+      <div v-else class="alert-rule-none">No alert rule configured for this item.</div>
     </div>
 
     <!-- Bottom actions -->
@@ -193,9 +276,13 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { getWatchlistItem, getWatchlistSignals, getWatchlistSentiment, deleteWatchlistItem } from '../api/intelligence'
+import {
+  getWatchlistItem, getWatchlistSignals, getWatchlistSentiment,
+  deleteWatchlistItem, updateWatchlistItem,
+  discoverSite, listAlertRules, updateAlertRule,
+} from '../api/intelligence'
 import { ArrowLeft } from 'lucide-vue-next'
 
 const props = defineProps({
@@ -211,6 +298,31 @@ const item = ref({})
 const signals = ref([])
 const sentimentData = ref([])
 const expandedId = ref(null)
+
+// Monitor website state
+const newSiteUrl = ref('')
+const addingSite = ref(false)
+const siteError = ref('')
+const siteSuccess = ref('')
+
+// Alert rule state
+const alertRule = ref(null)
+const editThreshold = ref(0.7)
+const newAlertKeyword = ref('')
+const updatingAlert = ref(false)
+const alertError = ref('')
+const alertSuccess = ref('')
+
+const monitoredWebsites = computed(() => {
+  const sites = item.value.monitored_sites || []
+  const webUrls = item.value.websites || []
+  // Merge: show monitored_sites objects plus any plain URL strings from websites array
+  const seen = new Set(sites.map(s => s.url || s.domain))
+  const extra = webUrls
+    .filter(u => typeof u === 'string' && !seen.has(u))
+    .map(u => ({ url: u }))
+  return [...sites, ...extra]
+})
 
 const itemId = props.id || route.params.id
 
@@ -348,6 +460,124 @@ const confirmDelete = async () => {
   }
 }
 
+const addMonitoredSite = async () => {
+  const url = newSiteUrl.value.trim()
+  if (!url) return
+  addingSite.value = true
+  siteError.value = ''
+  siteSuccess.value = ''
+  try {
+    // 1. Create the monitored site via POST /api/sites/
+    await discoverSite(url, 50)
+    // 2. Add URL to watchlist item's websites array
+    const currentWebsites = item.value.websites || []
+    if (!currentWebsites.includes(url)) {
+      const updatedWebsites = [...currentWebsites, url]
+      await updateWatchlistItem(itemId, { websites: updatedWebsites })
+      item.value.websites = updatedWebsites
+    }
+    siteSuccess.value = `Added ${url} to monitoring`
+    newSiteUrl.value = ''
+    // Refresh data to get updated monitored_sites
+    setTimeout(() => { siteSuccess.value = '' }, 3000)
+  } catch (e) {
+    siteError.value = 'Failed to add site: ' + (e.response?.data?.error || e.message)
+  } finally {
+    addingSite.value = false
+  }
+}
+
+const loadAlertRule = async () => {
+  try {
+    const res = await listAlertRules()
+    const d = res.data || res
+    const rules = Array.isArray(d) ? d : (d.data || d.rules || [])
+    // Find the alert rule for this watchlist item by name pattern
+    const itemName = item.value.name
+    const match = rules.find(r =>
+      r.name === `Watchlist: ${itemName}` ||
+      (r.keywords && r.keywords.includes(itemName))
+    )
+    if (match) {
+      alertRule.value = match
+      editThreshold.value = match.threshold ?? 0.7
+    }
+  } catch (e) {
+    // Non-critical, silently fail
+    alertRule.value = null
+  }
+}
+
+const updateThreshold = async () => {
+  if (!alertRule.value) return
+  updatingAlert.value = true
+  alertError.value = ''
+  alertSuccess.value = ''
+  try {
+    const res = await updateAlertRule(alertRule.value.id, {
+      threshold: editThreshold.value,
+    })
+    const d = res.data || res
+    alertRule.value = d.data || d
+    alertSuccess.value = 'Threshold updated'
+    setTimeout(() => { alertSuccess.value = '' }, 3000)
+  } catch (e) {
+    alertError.value = 'Failed to update threshold: ' + (e.response?.data?.error || e.message)
+  } finally {
+    updatingAlert.value = false
+  }
+}
+
+const addAlertKeyword = async () => {
+  const kw = newAlertKeyword.value.trim()
+  if (!kw || !alertRule.value) return
+  updatingAlert.value = true
+  alertError.value = ''
+  alertSuccess.value = ''
+  try {
+    const currentKeywords = alertRule.value.keywords || []
+    if (currentKeywords.includes(kw)) {
+      alertError.value = 'Keyword already exists'
+      updatingAlert.value = false
+      return
+    }
+    const updatedKeywords = [...currentKeywords, kw]
+    const res = await updateAlertRule(alertRule.value.id, {
+      keywords: updatedKeywords,
+    })
+    const d = res.data || res
+    alertRule.value = d.data || d
+    newAlertKeyword.value = ''
+    alertSuccess.value = `Added keyword "${kw}"`
+    setTimeout(() => { alertSuccess.value = '' }, 3000)
+  } catch (e) {
+    alertError.value = 'Failed to add keyword: ' + (e.response?.data?.error || e.message)
+  } finally {
+    updatingAlert.value = false
+  }
+}
+
+const removeAlertKeyword = async (kw) => {
+  if (!alertRule.value) return
+  updatingAlert.value = true
+  alertError.value = ''
+  alertSuccess.value = ''
+  try {
+    const updatedKeywords = (alertRule.value.keywords || []).filter(k => k !== kw)
+    const res = await updateAlertRule(alertRule.value.id, {
+      keywords: updatedKeywords,
+    })
+    const d = res.data || res
+    alertRule.value = d.data || d
+    alertSuccess.value = `Removed keyword "${kw}"`
+    setTimeout(() => { alertSuccess.value = '' }, 3000)
+  } catch (e) {
+    alertError.value = 'Failed to remove keyword: ' + (e.response?.data?.error || e.message)
+  } finally {
+    updatingAlert.value = false
+  }
+}
+
 const loadData = async () => {
   loading.value = true
   error.value = ''
@@ -358,11 +588,13 @@ const loadData = async () => {
       getWatchlistSentiment(itemId).catch(() => ({ data: [] })),
     ])
     const d = itemRes.data || itemRes
-    item.value = d
+    item.value = d.data || d
     const s = signalsRes.data || signalsRes
     signals.value = Array.isArray(s) ? s : (s.items || s.results || [])
     const sd = sentimentRes.data || sentimentRes
     sentimentData.value = Array.isArray(sd) ? sd : (sd.data || [])
+    // Load alert rule after item is loaded
+    await loadAlertRule()
   } catch (e) {
     error.value = 'Failed to load watchlist item: ' + (e.response?.data?.error || e.message)
   } finally {
@@ -1030,5 +1262,196 @@ onMounted(loadData)
   color: #F44336;
   font-size: 0.85rem;
   margin-top: 15px;
+}
+
+/* ── Monitor Website ── */
+.monitor-section {
+  margin-bottom: 28px;
+}
+
+.monitor-form {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.monitor-form .form-input {
+  flex: 1;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8rem;
+  padding: 8px 12px;
+  background: #0a0a0a;
+  border: 1px solid #333;
+  color: #e8e8e8;
+  outline: none;
+  border-radius: 2px;
+  box-sizing: border-box;
+}
+
+.monitor-form .form-input:focus {
+  border-color: #FF4500;
+}
+
+.btn-monitor-add {
+  white-space: nowrap;
+  padding: 8px 16px !important;
+  font-size: 0.78rem !important;
+}
+
+.btn-monitor-add:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.add-error {
+  margin-top: 8px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.78rem;
+  color: #F44336;
+}
+
+.add-success {
+  margin-top: 8px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.78rem;
+  color: #4CAF50;
+}
+
+/* ── Alerts Section ── */
+.alerts-section {
+  margin-bottom: 28px;
+}
+
+.alert-rule-display {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.alert-rule-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.alert-check {
+  color: #4CAF50;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.alert-rule-text {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8rem;
+  color: #ccc;
+}
+
+.alert-controls {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.alert-threshold-control,
+.alert-keyword-control {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.6rem;
+  color: #666;
+  letter-spacing: 1px;
+}
+
+.form-input-sm {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.78rem;
+  padding: 6px 10px;
+  background: #0a0a0a;
+  border: 1px solid #333;
+  color: #e8e8e8;
+  outline: none;
+  border-radius: 2px;
+  width: 140px;
+  box-sizing: border-box;
+}
+
+.form-input-sm:focus {
+  border-color: #FF4500;
+}
+
+.keyword-add-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.btn-action-sm {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.72rem;
+  padding: 5px 12px;
+  background: transparent;
+  border: 1px solid #FF4500;
+  color: #FF4500;
+  cursor: pointer;
+  transition: all 0.15s;
+  border-radius: 2px;
+  white-space: nowrap;
+}
+
+.btn-action-sm:hover:not(:disabled) {
+  background: rgba(255, 69, 0, 0.12);
+  color: #FF6A33;
+  border-color: #FF6A33;
+}
+
+.btn-action-sm:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.alert-keywords-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.alert-keyword-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  padding: 3px 10px;
+  background: rgba(255, 69, 0, 0.08);
+  border: 1px solid #FF4500;
+  color: #FF4500;
+  border-radius: 12px;
+}
+
+.keyword-remove {
+  background: none;
+  border: none;
+  color: #FF4500;
+  cursor: pointer;
+  font-size: 0.9rem;
+  padding: 0 2px;
+  line-height: 1;
+  opacity: 0.6;
+  transition: opacity 0.15s;
+}
+
+.keyword-remove:hover {
+  opacity: 1;
+}
+
+.alert-rule-none {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8rem;
+  color: #555;
+  font-style: italic;
 }
 </style>

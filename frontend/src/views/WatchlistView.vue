@@ -59,6 +59,34 @@
       <div v-if="addError" class="add-error">{{ addError }}</div>
     </div>
 
+    <!-- Suggested Sites (shown after item creation) -->
+    <div v-if="suggestedSites.length > 0" class="suggested-sites-panel">
+      <div class="suggested-header">
+        Item created! Suggested sites to monitor for {{ lastCreatedCountry }}:
+      </div>
+      <div class="suggested-list">
+        <div
+          v-for="site in suggestedSites"
+          :key="site.url"
+          class="suggested-item"
+        >
+          <span class="suggested-check">{{ site.added ? '\u2611' : '\u2610' }}</span>
+          <span class="suggested-name">{{ site.name }}</span>
+          <button
+            v-if="!site.added"
+            class="btn-suggested-add"
+            :disabled="site.adding"
+            @click="addSuggestedSite(site)"
+          >
+            <span v-if="site.adding">Adding...</span>
+            <span v-else>Add</span>
+          </button>
+          <span v-else class="suggested-added-text">Added</span>
+        </div>
+      </div>
+      <button class="btn-cancel btn-dismiss-suggestions" @click="suggestedSites = []">Dismiss</button>
+    </div>
+
     <!-- Loading -->
     <div v-if="loading" class="loading-text">Loading watchlist...</div>
 
@@ -148,7 +176,7 @@
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
-import { getWatchlist, createWatchlistItem, getWatchlistCompare } from '../api/intelligence'
+import { getWatchlist, createWatchlistItem, getWatchlistCompare, discoverSite, updateWatchlistItem } from '../api/intelligence'
 import { Eye, PlusCircle } from 'lucide-vue-next'
 
 const router = useRouter()
@@ -161,6 +189,9 @@ const submitting = ref(false)
 const addError = ref('')
 
 const compareData = ref([])
+const suggestedSites = ref([])
+const lastCreatedCountry = ref('')
+const lastCreatedItemId = ref(null)
 
 const newItem = ref({
   name: '',
@@ -316,6 +347,7 @@ const loadCompareData = async () => {
 const submitItem = async () => {
   submitting.value = true
   addError.value = ''
+  suggestedSites.value = []
   try {
     const payload = {
       name: newItem.value.name.trim(),
@@ -328,7 +360,24 @@ const submitItem = async () => {
     if (newItem.value.country_code) {
       payload.country_code = newItem.value.country_code
     }
-    await createWatchlistItem(payload)
+    const res = await createWatchlistItem(payload)
+    const responseData = res.data || res
+
+    // Check for suggested_sites in the response
+    const createdItem = responseData.data || responseData
+    lastCreatedItemId.value = createdItem.id || null
+    if (responseData.suggested_sites && responseData.suggested_sites.length > 0) {
+      const countryLabel = newItem.value.country_code
+        ? countryOptions.find(c => c.code === newItem.value.country_code)?.label?.split(' - ')[1] || newItem.value.country_code
+        : 'this item'
+      lastCreatedCountry.value = countryLabel
+      suggestedSites.value = responseData.suggested_sites.map(s => ({
+        ...s,
+        added: false,
+        adding: false,
+      }))
+    }
+
     // Reset form
     newItem.value = { name: '', item_type: 'organization', country_code: '', keywords: '' }
     showAddForm.value = false
@@ -337,6 +386,31 @@ const submitItem = async () => {
     addError.value = 'Failed to create item: ' + (e.response?.data?.error || e.message)
   } finally {
     submitting.value = false
+  }
+}
+
+const addSuggestedSite = async (site) => {
+  site.adding = true
+  try {
+    // Create monitored site
+    await discoverSite(site.url, 50)
+    // Link to watchlist item
+    if (lastCreatedItemId.value) {
+      // Get current item's websites, then add
+      const currentItem = items.value.find(i => i.id === lastCreatedItemId.value)
+      const currentWebsites = currentItem?.websites || []
+      if (!currentWebsites.includes(site.url)) {
+        await updateWatchlistItem(lastCreatedItemId.value, {
+          websites: [...currentWebsites, site.url],
+        })
+      }
+    }
+    site.added = true
+  } catch (e) {
+    // Still mark as attempted, show no error to keep UX clean
+    site.added = false
+  } finally {
+    site.adding = false
   }
 }
 
@@ -823,5 +897,83 @@ onBeforeUnmount(() => {
 
 .trend-stable {
   color: #666;
+}
+
+/* ── Suggested Sites Panel ── */
+.suggested-sites-panel {
+  background: #141414;
+  border: 1px solid #333;
+  border-left: 3px solid #4CAF50;
+  padding: 16px 20px;
+  margin-bottom: 24px;
+  border-radius: 2px;
+}
+
+.suggested-header {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8rem;
+  color: #4CAF50;
+  margin-bottom: 12px;
+}
+
+.suggested-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.suggested-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 0;
+}
+
+.suggested-check {
+  font-size: 1rem;
+  color: #666;
+  flex-shrink: 0;
+}
+
+.suggested-name {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8rem;
+  color: #ccc;
+  flex: 1;
+}
+
+.btn-suggested-add {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.72rem;
+  padding: 4px 12px;
+  background: transparent;
+  border: 1px solid #4CAF50;
+  color: #4CAF50;
+  cursor: pointer;
+  transition: all 0.15s;
+  border-radius: 2px;
+}
+
+.btn-suggested-add:hover:not(:disabled) {
+  background: rgba(76, 175, 80, 0.12);
+  color: #66BB6A;
+  border-color: #66BB6A;
+}
+
+.btn-suggested-add:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.suggested-added-text {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.72rem;
+  color: #4CAF50;
+}
+
+.btn-dismiss-suggestions {
+  margin-top: 4px;
+  font-size: 0.72rem;
 }
 </style>
